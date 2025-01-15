@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  user_id    String   @id @default(uuid())
+  username   String   @db.VarChar(255) @unique 
+  first_name String   @db.VarChar(255) 
+  last_name  String   @db.VarChar(255)
+  password   String   @db.VarChar(255)
+  created_at DateTime @default(now())
+  spaces     Space[]
+}
+
+model Space {
+  space_id      String          @id @default(uuid())
+  user_id       String
+  space_name    String          @db.VarChar(255) 
+  created_at    DateTime        @default(now())
+  user          User            @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, onDelete: NoAction)
+  contents      Content[]
+  spaceContents Space_Content[]
+}
+
+model Content {
+  content_id      String           @id @default(uuid())
+  space_id        String
+  content_type    String           @db.VarChar(255)
+  created_at      DateTime         @default(now())
+  space           Space            @relation(fields: [space_id], references: [space_id], onUpdate: NoAction, onDelete: NoAction)
+  youtubeContent  YoutubeContent?
+  documentContent DocumentContent?
+  spaceContents   Space_Content[]
+}
+
+model YoutubeContent {
+  content_id    String  @id @default(uuid())
+  youtube_id    String  @unique
+  title         String  @db.VarChar(255)
+  description   String  @db.VarChar(255)
+  thumbnail_url String  @db.VarChar(255)
+  transcript    String
+  youtube_url   String  @db.VarChar(255)
+  content       Content @relation(fields: [content_id], references: [content_id], onUpdate: NoAction, onDelete: NoAction)
+}
+
+model DocumentContent {
+  content_id String  @id @default(uuid())
+  filename   String  @db.VarChar(255)
+  file_url   String  @db.VarChar(255)
+  doc_id     String  @unique
+  hash       String  @unique
+  content    Content @relation(fields: [content_id], references: [content_id], onUpdate: NoAction, onDelete: NoAction)
+}
+
+model Space_Content {
+  space_content_id String  @id @default(uuid())
+  space_id         String
+  content_id       String
+  space            Space   @relation(fields: [space_id], references: [space_id], onUpdate: NoAction, onDelete: NoAction)
+  content          Content @relation(fields: [content_id], references: [content_id], onUpdate: NoAction, onDelete: NoAction)
+}
