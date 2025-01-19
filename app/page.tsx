@@ -30,6 +30,12 @@ export default function Home() {
             <span className="text-2xl font-bold text-gray-800 dark:text-white">VideoSage</span>
           </Link>
           <div className="flex items-center space-x-8">
+            <Link
+              href="/signin"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors border rounded-xl"
+            >
+              Sign In
+            </Link>
             <ThemeToggle />
           </div>
         </nav>
@@ -70,12 +76,6 @@ export default function Home() {
               >
                 Sign Up
                 <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-              <Link 
-                href="/signin"
-                className="inline-flex items-center px-6 py-3 text-lg font-semibold text-gray-800 dark:text-white bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-all hover:scale-105 active:scale-95"
-              >
-                Sign In
               </Link>
             </div>
           </motion.div>

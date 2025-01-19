@@ -1,29 +1,66 @@
 "use client"
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { ArrowRight, Mail, Lock, Eye, EyeOff } from 'lucide-react'
-
+import { jwtDecode } from "jwt-decode";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import axios from 'axios'
+import { useAuthStore } from '@/stores/auth-store'
+
+interface decodedToken {
+    user_id: string,
+    username: string, 
+    first_name: string, 
+    last_name: string
+}
 
 export default function SignIn() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
+  const { isAuthenticated, loginUser, setUserId, setUsername, setFirstName, setLastName, setToken} = useAuthStore()
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
   })
+  const pathname = usePathname();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+	if (isAuthenticated) {
+		if (pathname === "/signin") {
+			router.replace("/dashboard");
+		}
+	} else if (!isAuthenticated) {
+		if (pathname !== "/signin") {
+			router.replace("/signin")
+		}
+	}
+}, [isAuthenticated, pathname, router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would typically handle the signin logic
-    console.log('Form submitted:', formData)
-    router.push('/dashboard')
+    const response = await axios.post("/api/users/signin", {
+        username: formData.username, 
+        password: formData.password
+    })   
+    
+    if ( response?.data && typeof response.data === "object" && "token" in response.data && response.status === 200) {
+        const token = response.data.token as string; 
+        const decodedToken: decodedToken = jwtDecode(token);
+        setToken(token);
+		loginUser(token);
+        setUserId(decodedToken.user_id);
+        setUsername(decodedToken.username);
+        setFirstName(decodedToken.first_name);
+        setFirstName(decodedToken.last_name);
+        console.log('Form submitted:', formData)
+        router.push('/dashboard')
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,16 +96,16 @@ export default function SignIn() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Username / Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <Input
-                      id="email"
-                      name="email"
-                      type="email"
+                      id="username"
+                      name="username"
+                      type="username"
                       placeholder="you@example.com"
                       required
-                      value={formData.email}
+                      value={formData.username}
                       onChange={handleChange}
                       className="pl-10"
                     />
