@@ -16,6 +16,7 @@ model User {
   password   String   @db.VarChar(255)
   created_at DateTime @default(now())
   spaces     Space[]
+  contents   Content[]
 }
 
 model Space {
@@ -25,28 +26,35 @@ model Space {
   created_at    DateTime        @default(now())
   user          User            @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, onDelete: NoAction)
   contents      Content[]
-  spaceContents Space_Content[]
+  // spaceContents Space_Content[]
+}
+
+enum ContentType {
+  YOUTUBE_CONTENT
+  DOCUMENT_CONTENT
 }
 
 model Content {
   content_id      String           @id @default(uuid())
-  space_id        String
-  content_type    String           @db.VarChar(255)
+  user_id         String
+  space_id        String?
+  content_type    ContentType
   created_at      DateTime         @default(now())
-  space           Space            @relation(fields: [space_id], references: [space_id], onUpdate: NoAction, onDelete: NoAction)
+  user            User             @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, onDelete: NoAction)
+  space           Space?           @relation(fields: [space_id], references: [space_id], onUpdate: NoAction, onDelete: NoAction)
   youtubeContent  YoutubeContent?
   documentContent DocumentContent?
-  spaceContents   Space_Content[]
+  // spaceContents   Space_Content[]
 }
 
 model YoutubeContent {
   content_id    String  @id @default(uuid())
-  youtube_id    String  @unique
-  title         String  @db.VarChar(255)
-  description   String  @db.VarChar(255)
-  thumbnail_url String  @db.VarChar(255)
+  youtube_id    String
+  title         String  @db.Text
+  description   String  @db.Text
+  thumbnail_url String  @db.Text
   transcript    String
-  youtube_url   String  @db.VarChar(255)
+  youtube_url   String  @db.Text
   content       Content @relation(fields: [content_id], references: [content_id], onUpdate: NoAction, onDelete: NoAction)
 }
 
@@ -59,10 +67,10 @@ model DocumentContent {
   content    Content @relation(fields: [content_id], references: [content_id], onUpdate: NoAction, onDelete: NoAction)
 }
 
-model Space_Content {
-  space_content_id String  @id @default(uuid())
-  space_id         String
-  content_id       String
-  space            Space   @relation(fields: [space_id], references: [space_id], onUpdate: NoAction, onDelete: NoAction)
-  content          Content @relation(fields: [content_id], references: [content_id], onUpdate: NoAction, onDelete: NoAction)
-}
+// model Space_Content {
+//   space_content_id String  @id @default(uuid())
+//   space_id         String
+//   content_id       String
+//   space            Space   @relation(fields: [space_id], references: [space_id], onUpdate: NoAction, onDelete: NoAction)
+//   content          Content @relation(fields: [content_id], references: [content_id], onUpdate: NoAction, onDelete: NoAction)
+// }
