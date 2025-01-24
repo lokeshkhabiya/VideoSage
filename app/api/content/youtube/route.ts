@@ -50,7 +50,6 @@ export async function POST(req: NextRequest) {
                 { status: 401}
             )
         }
-        const fullTranscript = transcript.map((t) => t.text).join(" ");
 
         // metadata: 
         const metadataResponse = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${video_id}&key=${process.env.YOUTUBE_APIKEY}`);
@@ -63,23 +62,6 @@ export async function POST(req: NextRequest) {
         }
         const metadataItems = metadata.items[0].snippet;
 
-        // Check if this user has already added this YouTube video
-        const existingContent = await prisma.content.findFirst({
-            where: {
-                user_id: user.user_id,
-                youtubeContent: {
-                    youtube_id: video_id
-                }
-            }
-        });
-
-        if (existingContent) {
-            return NextResponse.json(
-                { message: "You have already added this YouTube video" },
-                { status: 200 }
-            );
-        }
-
         // Check if this YouTube video has already been processed
         const existingYoutubeContent = await prisma.youtubeContent.findFirst({
             where: {
@@ -90,44 +72,73 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        const contentId = uuid();
-        const createContent = await prisma.content.create({
-            data: {
-                content_id: contentId,
-                user_id: user.user_id,
-                space_id: space_id || null,
-                content_type: "YOUTUBE_CONTENT",
-                created_at: new Date(),
-                youtubeContent: {
-                    create: {
-                        youtube_id: video_id,
-                        title: metadataItems?.title || "",
-                        description: metadataItems?.description || "",
-                        thumbnail_url: metadataItems?.thumbnails?.standard?.url || "",
-                        transcript: fullTranscript,
-                        youtube_url: youtube_url,
+        const processedTranscriptChunks = await preprocessTranscript(transcript);
+
+        let contentId;
+        if (existingYoutubeContent) {
+            contentId = existingYoutubeContent.content_id;
+            // Check if this user has already added this YouTube video
+            const existingUserContent = await prisma.userContent.findFirst({
+                where: {
+                    user_id: user.user_id,
+                    content_id: contentId
+                }
+            });
+
+            if (existingUserContent) {
+                return NextResponse.json(
+                    { message: "You have already added this YouTube video" },
+                    { status: 200 }
+                );
+            }
+
+            // Add the existing content to the user's contents
+            await prisma.userContent.create({
+                data: {
+                    user_id: user.user_id,
+                    content_id: contentId
+                }
+            });
+        } else {
+            contentId = uuid();
+            // Create new content and associate it with the user
+            await prisma.content.create({
+                data: {
+                    content_id: contentId,
+                    space_id: space_id || null,
+                    content_type: "YOUTUBE_CONTENT",
+                    created_at: new Date(),
+                    youtubeContent: {
+                        create: {
+                            youtube_id: video_id,
+                            title: metadataItems?.title || "",
+                            description: metadataItems?.description || "",
+                            thumbnail_url: metadataItems?.thumbnails?.standard?.url || "",
+                            transcript: processedTranscriptChunks,
+                            youtube_url: youtube_url,
+                        }
+                    },
+                    users: {
+                        create: {
+                            user_id: user.user_id
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        // Vector processing
-        const pineconeIndex = await initializePinecone();
-        
-        // Only process vectors if this video hasn't been processed before
-        if (!existingYoutubeContent) {
-            const processedChunks = preprocessTranscript(transcript);
+            // Vector processing
+            const pineconeIndex = await initializePinecone();
             const embeddingPipeline = await pipeline("feature-extraction", "mixedbread-ai/mxbai-embed-large-v1", {
                 revision: "main",
                 quantized: false
             });
             
-            const embeddedChunks = await generateEmbeddings(processedChunks, embeddingPipeline, video_id);
+            const embeddedChunks = await generateEmbeddings(processedTranscriptChunks, embeddingPipeline, video_id);
             await upsertChunksToPinecone(pineconeIndex, embeddedChunks);
         }
 
         return NextResponse.json({ 
-            message: `Successfully added youtube content${!existingYoutubeContent ? '' : ' (reused existing vectors)'}`,
+            message: `Successfully added youtube content${existingYoutubeContent ? ' (reused existing vectors)' : ''}`,
             data: {
                 content_id: contentId,
                 youtube_id: video_id,

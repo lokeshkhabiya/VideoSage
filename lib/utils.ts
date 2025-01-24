@@ -47,8 +47,7 @@ export const initializePinecone = async () => {
     // });
     return pinecone.Index("youtube-content");
 };
-
-export const preprocessTranscript = (transcript: transcriptInterface[], chunkSize = 300): { text: string, startTime: number | null, endTime: number | null }[] => {
+export const preprocessTranscript = async (transcript: transcriptInterface[], chunkSize = 300): Promise<{ text: string, startTime: number | null, endTime: number | null }[]> => {
     const chunks: { text: string, startTime: number | null, endTime: number | null }[] = [];
     let currentChunk = { text: "", startTime: null as number | null, endTime: null as number | null };
   

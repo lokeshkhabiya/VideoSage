@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { verifyJwtToken } from '@/lib/jwt'
 
 export const config = {
-  matcher: '/api/content/:path*'
+  matcher: ['/api/content/:path*', '/api/generate/:path*']
 }
 
 export async function middleware(request: NextRequest) {

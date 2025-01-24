@@ -16,7 +16,7 @@ model User {
   password   String   @db.VarChar(255)
   created_at DateTime @default(now())
   spaces     Space[]
-  contents   Content[]
+  contents   UserContent[] // Changed from Content[] to UserContent[]
 }
 
 model Space {
@@ -34,28 +34,37 @@ enum ContentType {
   DOCUMENT_CONTENT
 }
 
+
 model Content {
   content_id      String           @id @default(uuid())
-  user_id         String
   space_id        String?
   content_type    ContentType
   created_at      DateTime         @default(now())
-  user            User             @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, onDelete: NoAction)
+  users           UserContent[]    // New relation to UserContent
   space           Space?           @relation(fields: [space_id], references: [space_id], onUpdate: NoAction, onDelete: NoAction)
   youtubeContent  YoutubeContent?
   documentContent DocumentContent?
-  // spaceContents   Space_Content[]
+}
+
+model UserContent {
+  user_id    String
+  content_id String
+  user       User   @relation(fields: [user_id], references: [user_id], onUpdate: NoAction, onDelete: NoAction)
+  content    Content @relation(fields: [content_id], references: [content_id], onUpdate: NoAction, onDelete: NoAction)
+
+  @@id([user_id, content_id]) // Composite primary key
 }
 
 model YoutubeContent {
   content_id    String  @id @default(uuid())
-  youtube_id    String
+  youtube_id    String  @unique // Ensure youtube_id is unique
   title         String  @db.Text
   description   String  @db.Text
   thumbnail_url String  @db.Text
-  transcript    String
+  transcript    Json
   youtube_url   String  @db.Text
   content       Content @relation(fields: [content_id], references: [content_id], onUpdate: NoAction, onDelete: NoAction)
+  metadata      Metadata[]
 }
 
 model DocumentContent {
@@ -67,10 +76,14 @@ model DocumentContent {
   content    Content @relation(fields: [content_id], references: [content_id], onUpdate: NoAction, onDelete: NoAction)
 }
 
-// model Space_Content {
-//   space_content_id String  @id @default(uuid())
-//   space_id         String
-//   content_id       String
-//   space            Space   @relation(fields: [space_id], references: [space_id], onUpdate: NoAction, onDelete: NoAction)
-//   content          Content @relation(fields: [content_id], references: [content_id], onUpdate: NoAction, onDelete: NoAction)
-// }
+model Metadata {
+  metadata_id String          @id @default(uuid())
+  youtube_id  String          @unique
+  summary     String?         @db.Text
+  flashcards  Json?           // Storing flashcards as JSON for flexibility
+  mindmap     Json?           // Storing mindmap as JSON for structured format
+  quiz        Json?           // Storing quiz questions and answers as JSON
+  created_at  DateTime        @default(now())
+  updated_at  DateTime        @updatedAt
+  youtubeContent YoutubeContent @relation(fields: [youtube_id], references: [youtube_id], onUpdate: NoAction, onDelete: Cascade)
+}
