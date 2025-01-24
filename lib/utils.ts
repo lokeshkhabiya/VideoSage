@@ -3,7 +3,10 @@ import { twMerge } from "tailwind-merge"
 import { YoutubeTranscript } from "youtube-transcript";
 import { Pinecone } from "@pinecone-database/pinecone"
 import { FeatureExtractionPipeline } from "@xenova/transformers";
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 export interface transcriptInterface {
     text: string,
     duration: number,
@@ -101,4 +104,10 @@ export const generateEmbeddings = async (chunks: any, embeddingPipeline: Feature
         await index.upsert(batch);
     }
 };
+
+export const summarizeChunks = async (transcripts: string) => {
+  const prompt = `You are a summarization assistant. Please provide a concise summary of the following YouTube video transcript in 300 words latest. Focus on the key points and main ideas discussed in the video. Give summary in structured manner. Do not include any introductory phrases or timestamps - just provide the direct summary of the content.`
+  const generateContent = await model.generateContent([prompt, transcripts])
+  return generateContent?.response?.text();
+}
   
