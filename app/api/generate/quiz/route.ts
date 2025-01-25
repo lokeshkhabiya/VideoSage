@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
             });
 
             return NextResponse.json({ 
-                message: `Successfully created summary for content_id: ${content_id} and youtube_id: ${video_id}`,
+                message: `Successfully created quiz for content_id: ${content_id} and youtube_id: ${video_id}`,
                 data: quizJson
             });
 
@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
         }
 
     } catch (error) {
-        console.error("Error while generating summary: ", error instanceof Error ? error.message : error );
+        console.error("Error while generating quiz: ", error instanceof Error ? error.message : error );
         return NextResponse.json(
             { message: "Error while generating quiz content!"},
             { status: 500 }

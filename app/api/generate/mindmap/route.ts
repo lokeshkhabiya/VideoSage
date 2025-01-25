@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
         } else {
             return NextResponse.json(
                 {
-                    message: "Found flashcards Successfully!",
+                    message: "Found mindmaps Successfully!",
                     data: existingMetadata.mindmap
                 }, { status: 200 }
             )
