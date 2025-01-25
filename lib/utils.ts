@@ -1,38 +1,41 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 import { YoutubeTranscript } from "youtube-transcript";
-import { Pinecone } from "@pinecone-database/pinecone"
+import { Pinecone } from "@pinecone-database/pinecone";
 import { FeatureExtractionPipeline } from "@xenova/transformers";
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 export interface transcriptInterface {
-    text: string,
-    duration: number,
-    offset: number,
-    lang: string
+    text: string;
+    duration: number;
+    offset: number;
+    lang: string;
 }
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+    return twMerge(clsx(inputs));
 }
 
-export async function fetchTranscripts (video_id: string): Promise<transcriptInterface[] | null> {
-  try {
-    const transcript = await YoutubeTranscript.fetchTranscript(video_id, {
-        lang: 'en'
-    });
+export async function fetchTranscripts(
+    video_id: string
+): Promise<transcriptInterface[] | null> {
+    try {
+        const transcript = await YoutubeTranscript.fetchTranscript(video_id, {
+            lang: "en",
+        });
 
-    const formattedTranscript: transcriptInterface[] = transcript.map(item => ({
-      text: item.text,
-      duration: item.duration,
-      offset: item.offset,
-      lang: item.lang || 'en'
-    }));
+        const formattedTranscript: transcriptInterface[] = transcript.map(
+            (item) => ({
+                text: item.text,
+                duration: item.duration,
+                offset: item.offset,
+                lang: item.lang || "en",
+            })
+        );
 
-    return formattedTranscript;
-    
+        return formattedTranscript;
     } catch (transcriptError: any) {
         console.error("Error fetching transcript:", transcriptError);
         return null;
@@ -41,7 +44,7 @@ export async function fetchTranscripts (video_id: string): Promise<transcriptInt
 
 export const initializePinecone = async () => {
     const pinecone = new Pinecone({
-        apiKey: process.env.PINECONE_API_KEY!
+        apiKey: process.env.PINECONE_API_KEY!,
     });
 
     // await pinecone.init({
@@ -50,41 +53,65 @@ export const initializePinecone = async () => {
     // });
     return pinecone.Index("youtube-content");
 };
-export const preprocessTranscript = async (transcript: transcriptInterface[], chunkSize = 300): Promise<{ text: string, startTime: number | null, endTime: number | null }[]> => {
-    const chunks: { text: string, startTime: number | null, endTime: number | null }[] = [];
-    let currentChunk = { text: "", startTime: null as number | null, endTime: null as number | null };
-  
+export const preprocessTranscript = async (
+    transcript: transcriptInterface[],
+    chunkSize = 300
+): Promise<
+    { text: string; startTime: number | null; endTime: number | null }[]
+> => {
+    const chunks: {
+        text: string;
+        startTime: number | null;
+        endTime: number | null;
+    }[] = [];
+    let currentChunk = {
+        text: "",
+        startTime: null as number | null,
+        endTime: null as number | null,
+    };
+
     transcript.forEach((item, index) => {
-      if (!currentChunk.startTime) currentChunk.startTime = item.offset as number;
-  
-      currentChunk.text += (currentChunk.text ? " " : "") + item.text;
-      currentChunk.endTime = (item.offset + item.duration) as number;
-  
-      if (currentChunk.text.split(" ").length >= chunkSize || index === transcript.length - 1) {
-        chunks.push({ ...currentChunk });
-        currentChunk = { text: "", startTime: null, endTime: null };
-      }
+        if (!currentChunk.startTime)
+            currentChunk.startTime = item.offset as number;
+
+        currentChunk.text += (currentChunk.text ? " " : "") + item.text;
+        currentChunk.endTime = (item.offset + item.duration) as number;
+
+        if (
+            currentChunk.text.split(" ").length >= chunkSize ||
+            index === transcript.length - 1
+        ) {
+            chunks.push({ ...currentChunk });
+            currentChunk = { text: "", startTime: null, endTime: null };
+        }
     });
     return chunks;
 };
 
-export const generateEmbeddings = async (chunks: any, embeddingPipeline: FeatureExtractionPipeline, video_id: string) => {
+export const generateEmbeddings = async (
+    chunks: any,
+    embeddingPipeline: FeatureExtractionPipeline,
+    video_id: string
+) => {
     return Promise.all(
-      chunks.map(async (chunk: any, i: number) => {
-        const embedding = await embeddingPipeline(chunk.text, { pooling: "mean", normalize: true });
-        return {
-          id: `${video_id}-chunk-${i}`,
-          video_id: video_id,
-          text: chunk.text,
-          startTime: chunk.startTime,
-          endTime: chunk.endTime,
-          vector: embedding.data,
-        };
-      })
+        chunks.map(async (chunk: any, i: number) => {
+            const embedding = await embeddingPipeline(chunk.text, {
+                pooling: "mean",
+                normalize: true,
+            });
+            return {
+                id: `${video_id}-chunk-${i}`,
+                video_id: video_id,
+                text: chunk.text,
+                startTime: chunk.startTime,
+                endTime: chunk.endTime,
+                vector: embedding.data,
+            };
+        })
     );
-  };
+};
 
-  export const upsertChunksToPinecone = async (index: any, chunks: any) => {
+export const upsertChunksToPinecone = async (index: any, chunks: any) => {
     // Ensure vectors is an array and matches Pinecone's expected format
     const vectors = chunks.map((chunk: any) => ({
         id: chunk.id,
@@ -96,7 +123,7 @@ export const generateEmbeddings = async (chunks: any, embeddingPipeline: Feature
             endTime: chunk.endTime,
         },
     }));
-    
+
     // Upsert in batches of 100 to avoid rate limits
     const batchSize = 100;
     for (let i = 0; i < vectors.length; i += batchSize) {
@@ -106,13 +133,13 @@ export const generateEmbeddings = async (chunks: any, embeddingPipeline: Feature
 };
 
 export const summarizeChunks = async (transcripts: string) => {
-  const prompt = `You are a summarization assistant. Please provide a concise summary of the following YouTube video transcript in 300 words latest. Focus on the key points and main ideas discussed in the video. Give summary in structured manner. Do not include any introductory phrases or timestamps - just provide the direct summary of the content.`
-  const generateContent = await model.generateContent([prompt, transcripts])
-  return generateContent?.response?.text();
-}
+    const prompt = `You are a summarization assistant. Please provide a concise summary of the following YouTube video transcript in 300 words latest. Focus on the key points and main ideas discussed in the video. Give summary in structured manner. Do not include any introductory phrases or timestamps - just provide the direct summary of the content.`;
+    const generateContent = await model.generateContent([prompt, transcripts]);
+    return generateContent?.response?.text();
+};
 
 export const generateFlashCards = async (transcripts: string) => {
-  const prompt = `You are an AI assistant trained to generate flashcards from youtube transcripts for educational purposes. Your task is to create structured flashcards in JSON format with the following fields:
+    const prompt = `You are an AI assistant trained to generate flashcards from youtube transcripts for educational purposes. Your task is to create structured flashcards in JSON format with the following fields:
 
                   1. **Question**: A clear and concise question about the topic.
                   2. **Hint**: A helpful clue or additional information to assist in answering the question.
@@ -146,13 +173,13 @@ export const generateFlashCards = async (transcripts: string) => {
                     ]
                   }
                   Always format your response in JSON for consistency.
-  `
-  const generateContent = await model.generateContent([prompt, transcripts])
-  return generateContent.response.text(); 
-}
+  `;
+    const generateContent = await model.generateContent([prompt, transcripts]);
+    return generateContent.response.text();
+};
 
 export const generateQuiz = async (transcripts: string) => {
-  const prompt = `You are an intelligent assistant trained to generate multiple-choice quizzes from YouTube video transcripts. Your task is to analyze the content of the transcript and create meaningful quiz questions for important topics covered in the video. There should be aleast 10 question. Generate more if transcript is long. Ensure every important topic / knowledge is covered.
+    const prompt = `You are an intelligent assistant trained to generate multiple-choice quizzes from YouTube video transcripts. Your task is to analyze the content of the transcript and create meaningful quiz questions for important topics covered in the video. There should be aleast 10 question. Generate more if transcript is long. Ensure every important topic / knowledge is covered.
                 Each quiz entry must include the following:
                 1. **Question**: A well-framed question based on the content.
                 2. **Options**: Four answer options, with only one being correct.
@@ -180,8 +207,17 @@ export const generateQuiz = async (transcripts: string) => {
                       "timestamp": "12:34"
                     }
                   ]
-                }`
+                }`;
+    const generateContent = await model.generateContent([prompt, transcripts]);
+    return generateContent.response.text();
+};
+
+export const generateMindMap = async (transcripts: string) => {
+  const prompt = `You are an AI designed to generate hierarchical mind maps from YouTube transcripts. Your output should be in a JSON format that is compatible with GoJS. Generate mindmap content such that it covers entire video mapped. 
+                  1. The JSON should have two main arrays: nodes and links.
+                  2. Each node should have a key (unique identifier), text (label), and optionally a category (to group types of nodes).
+                  3. Each link should connect two nodes using their key values (from and to).
+                  4. Organize the nodes hierarchically, starting with the root idea, followed by main topics and subtopics. Use numbers or unique IDs for the key field to maintain structure.`;
   const generateContent = await model.generateContent([prompt, transcripts]);
   return generateContent.response.text(); 
-}
-  
+};

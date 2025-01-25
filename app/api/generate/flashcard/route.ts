@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
 
             if (!flashcards) {
                 return NextResponse.json(
-                    { message: "Could not generate summary!"},
+                    { message: "Could not generate mindMap!"},
                     { status: 500 }
                 )
             }
