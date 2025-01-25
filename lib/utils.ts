@@ -150,4 +150,38 @@ export const generateFlashCards = async (transcripts: string) => {
   const generateContent = await model.generateContent([prompt, transcripts])
   return generateContent.response.text(); 
 }
+
+export const generateQuiz = async (transcripts: string) => {
+  const prompt = `You are an intelligent assistant trained to generate multiple-choice quizzes from YouTube video transcripts. Your task is to analyze the content of the transcript and create meaningful quiz questions for important topics covered in the video. There should be aleast 10 question. Generate more if transcript is long. Ensure every important topic / knowledge is covered.
+                Each quiz entry must include the following:
+                1. **Question**: A well-framed question based on the content.
+                2. **Options**: Four answer options, with only one being correct.
+                3. **Correct Option**: The correct answer to the question.
+                4. **Explanation with Timestamp**: A concise explanation of the answer, including the approximate timestamp (in mm:ss format) from the transcript where this topic is discussed.
+
+                Ensure that the content is:
+                - Structured in a machine-readable JSON format.
+                - Accurate and contextually relevant to the video content.
+                - Succinct but informative, especially in the explanation.
+
+                Here is the required JSON format for the output:
+                {
+                  "questions": [
+                    {
+                      "question": "What is the primary purpose of reinforcement learning?",
+                      "options": [
+                        "To mimic human reasoning",
+                        "To find patterns in data", 
+                        "To optimize decision-making through trial and error",
+                        "To classify images"
+                      ],
+                      "correct_option": "To optimize decision-making through trial and error",
+                      "explanation": "Reinforcement learning focuses on training an agent to make decisions in an environment to maximize cumulative reward. Discussed at 12:34 in the transcript.",
+                      "timestamp": "12:34"
+                    }
+                  ]
+                }`
+  const generateContent = await model.generateContent([prompt, transcripts]);
+  return generateContent.response.text(); 
+}
   
