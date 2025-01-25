@@ -33,25 +33,32 @@ export async function GET(req: NextRequest) {
             )
         }
 
-        const metadata = await prisma.metadata.findUnique({
+        const existingMetadata = await prisma.metadata.findUnique({
             where: {
                 youtube_id: video_id
             }
         });
-        // check if metadata contains that video generation data 
-        
-        if (!metadata) {
-            // create the generation data 
-            
-            // 1. get transcripts stored in youtubeContent 
-            const youtubeData = await prisma.youtubeContent.findUnique(
-                {
-                    where: {
-                        content_id: content_id,
-                        youtube_id: video_id
-                    }
+
+        if (!existingMetadata) {
+            await prisma.metadata.create({
+                data: {
+                    metadata_id: uuid(),
+                    youtube_id: video_id,
+                    created_at: new Date(),
+                    updated_at: new Date()
                 }
-            )
+            });
+        }
+
+        if (!existingMetadata?.summary) {
+            // create the generation data 
+            // 1. get transcripts stored in youtubeContent 
+            const youtubeData = await prisma.youtubeContent.findUnique({
+                where: {
+                    content_id: content_id,
+                    youtube_id: video_id
+                }
+            });
             
             if (!youtubeData?.transcript) {
                 return NextResponse.json(
@@ -73,17 +80,11 @@ export async function GET(req: NextRequest) {
                 );
             }
 
-            await prisma.metadata.create(
-                {
-                    data: {
-                        metadata_id: uuid(),
-                        youtube_id: video_id,
-                        summary: summary,
-                        created_at: new Date(),
-                        updated_at: new Date()
-                    }
-                }
-            )
+            // Update metadata with summary
+            await prisma.metadata.update({
+                where: { youtube_id: video_id },
+                data: { summary }
+            });
             
             // 3. return the summary
             return NextResponse.json({ 
@@ -92,12 +93,10 @@ export async function GET(req: NextRequest) {
             });
 
         } else {
-            return NextResponse.json(
-                { 
-                    message: "Found summary Successfully!",
-                    data: metadata.summary
-                }, { status: 200 }
-            )
+            return NextResponse.json({ 
+                message: "Found summary Successfully!",
+                data: existingMetadata.summary
+            }, { status: 200 });
         }
 
     } catch (error) {

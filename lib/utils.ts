@@ -110,4 +110,44 @@ export const summarizeChunks = async (transcripts: string) => {
   const generateContent = await model.generateContent([prompt, transcripts])
   return generateContent?.response?.text();
 }
+
+export const generateFlashCards = async (transcripts: string) => {
+  const prompt = `You are an AI assistant trained to generate flashcards from youtube transcripts for educational purposes. Your task is to create structured flashcards in JSON format with the following fields:
+
+                  1. **Question**: A clear and concise question about the topic.
+                  2. **Hint**: A helpful clue or additional information to assist in answering the question.
+                  3. **Answer**: The correct and precise answer to the question.
+                  4. **Explanation**: A brief but detailed explanation of the answer for better understanding.
+                  5. **Source**: The approximate timestamp of the relevant video or material, represented in the format "MM:SS" (e.g., 12:45).
+
+                  Follow these rules:
+                  - Ensure all fields are present for each flashcard.
+                  - Keep the format machine-readable (JSON).
+                  - The "Hint" should not reveal the full answer but give helpful context.
+                  - The "Source" must be approximate, and if no video is referenced, mention "N/A."
+
+                  Here is an example of the required output structure:
+                  {
+                    "flashcards": [
+                      {
+                        "question": "What is supervised learning in Machine Learning?",
+                        "hint": "It involves labeled data.",
+                        "answer": "A type of machine learning where the model is trained on labeled data to make predictions.",
+                        "explanation": "Supervised learning uses input-output pairs to teach the model how to predict outcomes based on labeled examples.",
+                        "source": "08:30"
+                      },
+                      {
+                        "question": "What does 'OOP' stand for in programming?",
+                        "hint": "It’s related to a paradigm focusing on 'objects.'",
+                        "answer": "Object-Oriented Programming.",
+                        "explanation": "OOP is a programming paradigm based on the concept of objects containing data and methods for data manipulation.",
+                        "source": "N/A"
+                      }
+                    ]
+                  }
+                  Always format your response in JSON for consistency.
+  `
+  const generateContent = await model.generateContent([prompt, transcripts])
+  return generateContent.response.text(); 
+}
   
