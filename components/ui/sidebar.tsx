@@ -1,0 +1,100 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/components/auth-provider";
+import { Home, Settings, LogOut, Plus } from "lucide-react";
+
+export function Sidebar() {
+  const { user, logout } = useAuth();
+  const router = useRouter();
+
+  // This would typically come from an API call or state management
+  const spaces = [
+    { id: "default", name: "Default Space" },
+    { id: "web-dev", name: "Web Development" },
+    { id: "ai", name: "AI & Machine Learning" },
+  ];
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b">
+        <Link href="/" className="flex items-center space-x-2">
+          <VideoSageLogo className="h-6 w-6" />
+          <span className="font-bold">VideoSage</span>
+        </Link>
+      </div>
+      <ScrollArea className="flex-1 p-4">
+        <nav className="space-y-2">
+          <Button variant="ghost" className="w-full justify-start" asChild>
+            <Link href="/dashboard">
+              <Home className="mr-2 h-4 w-4" />
+              Dashboard
+            </Link>
+          </Button>
+          <div className="pt-4">
+            <h2 className="mb-2 px-2 text-lg font-semibold tracking-tight">
+              Spaces
+            </h2>
+            {spaces.map((space) => (
+              <Button
+                key={space.id}
+                variant="ghost"
+                className="w-full justify-start"
+                asChild
+              >
+                <Link href={`/spaces/${space.id}`}>{space.name}</Link>
+              </Button>
+            ))}
+            <Button variant="ghost" className="w-full justify-start">
+              <Plus className="mr-2 h-4 w-4" />
+              Create New Space
+            </Button>
+          </div>
+        </nav>
+      </ScrollArea>
+      <div className="p-4 border-t">
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={() => router.push("/settings")}
+        >
+          <Settings className="mr-2 h-4 w-4" />
+          Settings
+        </Button>
+        {user && (
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-red-500"
+            onClick={() => logout()}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Log out
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function VideoSageLogo(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m22 8-6 4 6 4V8Z" />
+      <rect x="2" y="6" width="14" height="12" rx="2" ry="2" />
+    </svg>
+  );
+}
