@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useAuth } from "@/components/auth-provider";
+import { useAuth } from "@/hooks/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link2, ArrowRight } from "lucide-react";

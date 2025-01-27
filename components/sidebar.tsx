@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAuth } from "@/components/auth-provider";
+import { useAuth } from "@/hooks/auth-provider";
 import { Home, Settings, LogOut, Plus } from "lucide-react";
 import { useState } from "react";
 import { CreateSpaceDialog } from "@/components/create-space-dialog";

@@ -1,4 +1,3 @@
-// components/settings/SettingsPage.tsx
 "use client";
 
 import * as React from "react";
@@ -9,6 +8,9 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { ProfileSettingsForm } from "./ProfileSettingsForm";
 import { DeactivateAccountDialog } from "./DeactivateAccountDialog";
+import { useAuth } from "@/hooks/auth-provider";
+
+
 
 const profileFormSchema = z
   .object({
@@ -96,6 +98,14 @@ export type DeactivateFormValues = z.infer<typeof deactivateFormSchema>;
 
 export function SettingsPage() {
   const router = useRouter();
+  const { user, updateUserData, logout } = useAuth();
+
+  // Ensure user is authenticated
+  React.useEffect(() => {
+    if (!user) {
+      router.replace("/signin");
+    }
+  }, [user, router]);
 
   // State for Profile form submission
   const [isLoading, setIsLoading] = React.useState(false);
@@ -107,9 +117,9 @@ export function SettingsPage() {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      email: "john.doe@example.com",
-      firstName: "John",
-      lastName: "Doe",
+      email: user?.email || "",
+      firstName: user?.first_name || "",
+      lastName: user?.last_name || "",
       currentPassword: "",
       newPassword: "",
       confirmNewPassword: "",
@@ -128,14 +138,20 @@ export function SettingsPage() {
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true);
     try {
-      const wantsToChangePassword = data.newPassword!.length > 0;
+      const wantsToChangePassword = Boolean(data.newPassword);
 
       if (wantsToChangePassword) {
-        // Validate current password on your backend, update to newPassword, etc.
+        // Validate and update password logic here
       }
 
-      // Simulate an API call
+      // Simulate an API call (replace with real backend call)
       await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      updateUserData({
+        email: data.email,
+        first_name: data.firstName,
+        last_name: data.lastName,
+      });
 
       toast.success("Profile updated successfully");
 
@@ -157,10 +173,11 @@ export function SettingsPage() {
   async function onDeactivate(data: DeactivateFormValues) {
     setIsDeactivating(true);
     try {
-      // Here you would verify the password and deactivate the account
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
+      // Simulate account deactivation (replace with real API call)
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       toast.success("Account deactivated successfully");
-      router.push("/");
+      logout();
+      router.replace("/");
     } catch (error) {
       toast.error("Failed to deactivate account");
     } finally {
@@ -186,3 +203,5 @@ export function SettingsPage() {
     </div>
   );
 }
+
+

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CustomThemeToggle } from "@/components/mode-toggle";
-import { useAuth } from "@/components/auth-provider";
+import { useAuth } from "@/hooks/auth-provider";
 import { ChevronLeft, Menu, Settings, LogOut } from "lucide-react";
 import {
   DropdownMenu,
@@ -53,7 +53,7 @@ export function Header() {
           </div>
           <div className="md:flex items-center w-6 h-6 hidden ">
             <Button
-              className="border h-8 w-8"
+              className=" h-8 w-8"
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
@@ -74,17 +74,17 @@ export function Header() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Avatar className="h-8 w-8 cursor-pointer">
+                  <Avatar className="h-10 w-10 cursor-pointer">
                     <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent className="p-6 dark:bg-gray-900" align="end">
                   <DropdownMenuItem onSelect={() => router.push("/settings")}>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => logout()}>
-                    <LogOut className="mr-2 h-4 w-4 border" />
+                    <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -94,7 +94,11 @@ export function Header() {
                 <Button className="border" variant="ghost" asChild>
                   <Link href="/signin">Sign In</Link>
                 </Button>
-                <Button className="bg-gray-900 border text-white" variant="ghost" asChild>
+                <Button
+                  className="bg-gray-900 border text-white"
+                  variant="ghost"
+                  asChild
+                >
                   <Link href="/signup">Sign Up</Link>
                 </Button>
               </>
