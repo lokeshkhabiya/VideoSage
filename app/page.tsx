@@ -4,13 +4,13 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import {
-  ArrowRight,
   PlayCircle,
   FileText,
   Zap,
   BrainCircuit,
   MessageSquare,
   Sparkles,
+  Ghost,
 } from "lucide-react";
 
 const fadeIn = {
@@ -26,7 +26,7 @@ export default function Home() {
 
       <main className="container mx-auto px-4">
         <motion.section
-          className="py-20 text-center relative"
+          className="py-20 text-center relative pt-48"
           initial="initial"
           animate="animate"
           variants={fadeIn}
@@ -54,10 +54,10 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.6 }}
           >
             <div className="space-x-4">
-              <Button asChild>
+              <Button variant='ghost' className="bg-gray-900 border text-white" asChild>
                 <Link href="/signup">Sign Up</Link>
               </Button>
-              <Button variant="outline" asChild>
+              <Button className="dark:bg-gray-900 border" variant="ghost" asChild>
                 <Link href="/signin">Sign in</Link>
               </Button>
             </div>
@@ -154,7 +154,7 @@ export default function Home() {
             Join VideoSage today and transform the way you learn from YouTube
             videos.
           </p>
-          <Button asChild size="lg">
+          <Button className="" asChild size="lg">
             <Link href="/signup">Try VideoSage for Free</Link>
           </Button>
         </motion.section>
