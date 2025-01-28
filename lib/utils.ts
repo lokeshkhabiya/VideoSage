@@ -4,7 +4,9 @@ import { YoutubeTranscript } from "youtube-transcript";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { FeatureExtractionPipeline } from "@xenova/transformers";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { HfInference } from "@huggingface/inference";
 
+const hf = new HfInference(process.env.HF_TOKEN!)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 export interface transcriptInterface {
@@ -128,7 +130,7 @@ export const upsertChunksToPinecone = async (index: any, chunks: any) => {
     const batchSize = 100;
     for (let i = 0; i < vectors.length; i += batchSize) {
         const batch = vectors.slice(i, i + batchSize);
-        await index.upsert(batch);
+        await index.namespace("videosage-namespace").upsert(batch);
     }
 };
 
@@ -221,3 +223,36 @@ export const generateMindMap = async (transcripts: string) => {
   const generateContent = await model.generateContent([prompt, transcripts]);
   return generateContent.response.text(); 
 };
+
+export async function queryPineconeVectorStore(
+    client: Pinecone,
+    indexname: string,
+    namespace: string, 
+    video_id: string,
+    searchQuery: string
+): Promise<string> {
+    const hfoutput = await hf.featureExtraction({
+        model: 'mixedbread-ai/mxbai-embed-large-v1',
+        inputs: searchQuery
+    })
+    
+    const queryEmbedding = Array.from(hfoutput);
+
+    const index = client.index(indexname);
+    const queryResponse = await index.namespace(namespace).query({
+        topK: 5,
+        vector: queryEmbedding as any,
+        includeMetadata: true,
+        includeValues: false,
+    });
+
+    if (queryResponse.matches.length > 0) {
+        const concatRetrievals = queryResponse.matches.map((match, idx) => {
+            return `\n Transcript chunks findings ${idx + 1}: \n ${match.metadata?.text} \n chunk timestamp startTime: ${match.metadata?.startTime} & endTime: ${match.metadata?.endTime}`
+        }).join(`\n\n`)
+
+        return concatRetrievals
+    } else {
+        return "<no match>";
+    }
+}
