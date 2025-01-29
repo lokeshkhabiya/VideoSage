@@ -87,7 +87,7 @@ export default function ContentPage({ id }: ContentPageProps) {
                 activeVideoTab={activeVideoTab}
                 setActiveVideoTab={setActiveVideoTab}
                 dummyChapters={dummyChapters}
-                dummyTranscript={dummyTranscript}
+                // dummyTranscript={dummyTranscript}
               />
             </ResizablePanel>
 

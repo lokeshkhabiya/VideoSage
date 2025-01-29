@@ -18,47 +18,40 @@ export async function POST(req: NextRequest) {
     const reqBody = await req.json();
     const video_id = reqBody.data.video_id
     const content_id = reqBody.data.content_id
-    console.log(reqBody);
 
     const messages: Message[] = reqBody.messages;
     const userQuestion = messages[messages.length - 1].content;
     
     const searchQuery = `Represent this sentence for searching relevant passages:${userQuestion}`
 
-    const retrievals = await queryPineconeVectorStore(pc, "youtube-content", "videosage-namespace", searchQuery, video_id);
+    const retrievals = await queryPineconeVectorStore(pc, "youtube-content", "videosage-namespace-2", searchQuery, video_id);
 
     // final prompt to gemini api
-    const finalPrompt = `You are an AI assistant tasked with answering questions about a YouTube video based on its transcript. 
+    const finalPrompt = `You are an intelligent assistant having a natural conversation about the video content. You aim to be helpful, accurate and engaging in your responses.
 
     Context:
-    - You have access to relevant chunks of the video transcript.
-    - The user may ask follow-up questions.
-    - Previous conversation history is available in the messages array.
-    - Each message has a role (user/assistant) and content.
+    - You have deep understanding of the video content
+    - You can reference specific moments in the video using timestamps
+    - You maintain context from previous messages in the conversation
+    - You speak naturally while being precise and informative
     
     Instructions:
-    1. Carefully analyze the provided transcript chunks.
-    2. Focus only on information explicitly stated in the transcript.
-    3. If the answer cannot be found in the transcript, acknowledge this limitation but provide your thoughtful insights based on the context.
-    4. Try to include the timestamps (startTime) from the transcript chunks when referencing information.
-    5. Structure your response as follows:
-       - First, directly answer the user's question in a clear and concise way
-       - Provide specific examples or quotes from the transcript to support your answer
-       - Add relevant context from other parts of the transcript if it helps understanding
-       - If the question can't be fully answered from the transcript, explain what you can confidently say
-       - Use natural, conversational language while maintaining accuracy
-       - Reference timestamps when citing specific information
+    1. Provide clear, direct answers that flow naturally
+    2. Include relevant timestamps when discussing specific points
+    3. Add helpful context to enrich the explanation
+    4. Use a conversational, engaging tone
+    5. Structure responses to be easy to follow
+    6. Reference concrete examples to illustrate points
     
     User Question: ${userQuestion}
     
-    Relevant Transcript Chunks:
+    Reference Context:
     ${retrievals}
 
-    message history: 
+    Previous Messages:
     ${messages}
     
-    Please provide a clear, accurate, and well-structured response based on the transcript evidence provided, with timestamps (startTime) for all referenced information.`;
-    
+    Please provide a natural, informative response that helps the user understand the content better.`;
 
     // stream response from gemini 
 

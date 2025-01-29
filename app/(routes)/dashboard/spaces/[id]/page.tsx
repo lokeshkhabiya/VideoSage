@@ -9,6 +9,7 @@ import { useSpaces } from "@/hooks/space-provider";
 /** Shape of each content item in the space. */
 interface ContentItem {
   id: string;
+  youtube_id: string;
   type: string;
   title?: string | null;
   thumbnailUrl?: string | null;

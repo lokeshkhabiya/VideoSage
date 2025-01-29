@@ -75,7 +75,6 @@ export default function SignIn() {
           token,
         });
 
-        console.log("Form submitted:", formData);
         router.push("/dashboard");
       }
     } catch (error) {

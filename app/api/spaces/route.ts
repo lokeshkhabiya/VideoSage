@@ -54,6 +54,7 @@ export async function GET(req: NextRequest) {
         // If it’s a Document content:
         filename: spaceContent.content.documentContent?.filename || null,
         fileUrl: spaceContent.content.documentContent?.file_url || null,
+        youtube_id: spaceContent.content.youtubeContent?.youtube_id || null,
       })),
     }));
 
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     // Verify token
     const payload = await verifyJwtToken(token, process.env.JWT_SECRET!);
-    const userId = payload.user_id;
+    const userId = payload?.user_id;
     if (!userId) {
       return NextResponse.json(
         { message: "Invalid token: missing user_id" },

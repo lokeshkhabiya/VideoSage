@@ -16,7 +16,6 @@ export async function verifyJwtToken(
       token,
       new TextEncoder().encode(secret)
     );
-    console.log("Decoded JWT Payload:", payload);
     return payload as MyJWTPayload;
   } catch (error) {
     console.error("Failed to verify JWT:", error);

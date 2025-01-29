@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/auth-provider";
 import { useSpaces } from "@/hooks/space-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link2, ArrowRight } from "lucide-react";
+import { Link2, ArrowRight, Loader2 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
   const pathname = usePathname();
-
+  const [isLoading, setIsLoading] = useState(false);
   const { isAuthenticated, user } = useAuth();
   const { setSpaces, setLoading, loading, addContentToSpace } = useSpaces();
 
@@ -62,7 +62,6 @@ export default function RootLayout({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      console.log("File selected:", file);
       // handle your upload logic here if needed
     }
   };
@@ -79,6 +78,7 @@ export default function RootLayout({
     const space_id = matched ? matched[1] : undefined;
 
     try {
+      setIsLoading(true)
       const res = await fetch("/api/contents", {
         method: "POST",
         headers: {
@@ -97,7 +97,6 @@ export default function RootLayout({
 
       const json = await res.json();
       const { data } = json;
-      console.log("New content created:", data);
 
       // 3A) Update local store
       addContentToSpace(data.space_id, {
@@ -114,6 +113,7 @@ export default function RootLayout({
     } catch (err) {
       console.error("Error creating content:", err);
     } finally {
+      setIsLoading(false)
       setInputValue("");
     }
   };
@@ -138,9 +138,10 @@ export default function RootLayout({
                     <button
                       type="button"
                       onClick={handleFileUpload}
+                      disabled={isLoading}
                       className="p-2 hover:bg-muted rounded-full transition-colors"
                     >
-                      <Link2 className="h-5 w-5 text-muted-foreground" />
+                      {isLoading ? <Loader2 className="h-5 w-5 animate-spin"/> : <Link2 className="h-5 w-5 text-muted-foreground" />}
                     </button>
                   </div>
 

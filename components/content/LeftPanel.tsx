@@ -20,7 +20,6 @@ interface LeftPanelProps {
     title: string;
     description: string;
   }[];
-  thumbnailUrl: string;
 }
 
 interface TranscriptSegment {
@@ -33,12 +32,11 @@ export default function LeftPanel({
   activeVideoTab,
   setActiveVideoTab,
   dummyChapters,
-  thumbnailUrl,
 }: LeftPanelProps) {
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  // const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptSegment[]>([]);
   const [chapters, setChapters] = useState(dummyChapters);
-  const [currentThumbnail, setCurrentThumbnail] = useState(thumbnailUrl);
+  // const [currentThumbnail, setCurrentThumbnail] = useState(thumbnailUrl);
   const [_, setYoutubeUrl] = useState("");
   const [youtube_id, setYoutube_id] = useState("");
 
@@ -59,7 +57,7 @@ export default function LeftPanel({
       const data = await res.json();
       setYoutubeUrl(data.youtubeUrl);
       setYoutube_id(data.youtube_id);
-      setCurrentThumbnail(data.thumbnailUrl);
+      // setCurrentThumbnail(data.thumbnailUrl);
 
       // Parse and set the transcript
       const parsedTranscript = parseTranscript(data.transcript);
@@ -78,10 +76,6 @@ export default function LeftPanel({
     } catch (error) {
       console.error("Error fetching chapters:", error);
     }
-  };
-
-  const handlePlayVideo = () => {
-    setIsVideoPlaying(true);
   };
 
   useEffect(() => {
@@ -110,7 +104,7 @@ export default function LeftPanel({
           className="min-h-0 h-fit w-auto"
         >
           <div className="aspect-video rounded-lg overflow-hidden bg-black h-fit w-auto">
-            {isVideoPlaying ? (
+            (
               // Render YouTube iframe if video is playing
               <iframe
                 width="100%"
@@ -121,28 +115,7 @@ export default function LeftPanel({
                 allowFullScreen
                 className="w-full h-full"
               ></iframe>
-            ) : (
-              // Render thumbnail with play button
-              <div
-                className="relative w-full h-full cursor-pointer rounded-lg"
-                onClick={handlePlayVideo}
-              >
-                <img
-                  src={currentThumbnail}
-                  alt="Video Thumbnail"
-                  className="w-full h-full object-cover"
-                />
-                {/* Play button overlay */}
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                  <button
-                    className="text-white text-4xl bg-gray-800 p-4 rounded-full shadow-lg border-white border"
-                    aria-label="Play Video"
-                  >
-                    <Play className="fill-white" />
-                  </button>
-                </div>
-              </div>
-            )}
+            )
           </div>
         </ResizablePanel>
 

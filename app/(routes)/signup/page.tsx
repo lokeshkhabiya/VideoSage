@@ -53,8 +53,6 @@ export default function SignUp() {
       password: formData.password,
     });
 
-    console.log("response", response);
-    console.log("Form submitted:", formData);
     router.push("/dashboard");
   };
 

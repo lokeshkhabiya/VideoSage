@@ -57,7 +57,7 @@ export const initializePinecone = async () => {
 };
 export const preprocessTranscript = async (
     transcript: transcriptInterface[],
-    chunkSize = 50
+    chunkSize = 300
 ): Promise<
     { text: string; startTime: number | null; endTime: number | null }[]
 > => {
@@ -130,7 +130,7 @@ export const upsertChunksToPinecone = async (index: any, chunks: any) => {
     const batchSize = 100;
     for (let i = 0; i < vectors.length; i += batchSize) {
         const batch = vectors.slice(i, i + batchSize);
-        await index.namespace("videosage-namespace").upsert(batch);
+        await index.namespace("videosage-namespace-2").upsert(batch);
     }
 };
 
@@ -250,7 +250,7 @@ export async function queryPineconeVectorStore(
         const concatRetrievals = queryResponse.matches.map((match, idx) => {
             return `\n Transcript chunks findings ${idx + 1}: \n ${match.metadata?.text} \n chunk timestamp startTime: ${match.metadata?.startTime} & endTime: ${match.metadata?.endTime}`
         }).join(`\n\n`)
-
+        
         return concatRetrievals
     } else {
         return "<no match>";
