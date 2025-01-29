@@ -37,7 +37,6 @@ const Chat = (props: Props) => {
             </p>
           </div>
           {messages.map((message, index) => {
-            console.log(message.content);
             return (
               <MessageBox
                 key={index}
