@@ -10,7 +10,6 @@ import {
   BrainCircuit,
   MessageSquare,
   Sparkles,
-  Ghost,
 } from "lucide-react";
 
 const fadeIn = {
@@ -21,12 +20,12 @@ const fadeIn = {
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-300 px-4">
       <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-gray-900 [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#63e_100%)] dark:[background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)] opacity-30"></div>
 
-      <main className="container mx-auto px-4">
+      <main className="container mx-auto ">
         <motion.section
-          className="py-20 text-center relative pt-48"
+          className="py-20 text-center relative pt-36"
           initial="initial"
           animate="animate"
           variants={fadeIn}
@@ -54,10 +53,18 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.6 }}
           >
             <div className="space-x-4">
-              <Button variant='ghost' className="bg-gray-900 border text-white" asChild>
+              <Button
+                variant="ghost"
+                className="bg-gray-900 border text-white p-5 text-md"
+                asChild
+              >
                 <Link href="/signup">Sign Up</Link>
               </Button>
-              <Button className="dark:bg-gray-900 border" variant="ghost" asChild>
+              <Button
+                className="dark:bg-gray-900 border p-5 text-md"
+                variant="ghost"
+                asChild
+              >
                 <Link href="/signin">Sign in</Link>
               </Button>
             </div>
@@ -66,7 +73,7 @@ export default function Home() {
 
         <motion.section
           id="features"
-          className="py-20"
+          className="py-10"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -154,15 +161,11 @@ export default function Home() {
             Join VideoSage today and transform the way you learn from YouTube
             videos.
           </p>
-          <Button className="" asChild size="lg">
+          <Button className="p-5 text-md" asChild size="lg">
             <Link href="/signup">Try VideoSage for Free</Link>
           </Button>
         </motion.section>
       </main>
-
-      <footer className="container mx-auto px-4 py-8 text-center text-gray-600 dark:text-gray-400">
-        <p>&copy; {new Date().getFullYear()} VideoSage. All rights reserved.</p>
-      </footer>
     </div>
   );
 }

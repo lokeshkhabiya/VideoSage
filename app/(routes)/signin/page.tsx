@@ -1,71 +1,91 @@
-"use client"
+"use client";
 
-import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import { usePathname, useRouter } from 'next/navigation'
-import { ArrowRight, Mail, Lock, Eye, EyeOff } from 'lucide-react'
-import { jwtDecode } from "jwt-decode";
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import axios from 'axios'
-import { useAuthStore } from '@/stores/auth-store'
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { usePathname, useRouter } from "next/navigation";
+import { ArrowRight, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import axios from "axios";
+import { useAuth } from "@/hooks/auth-provider";
 
-interface decodedToken {
-    user_id: string,
-    username: string, 
-    first_name: string, 
-    last_name: string
+interface DecodedToken {
+  user_id: string;
+  username: string;
+  first_name: string;
+  last_name: string;
 }
 
 export default function SignIn() {
-  const router = useRouter()
-  const [showPassword, setShowPassword] = useState(false)
-  const { isAuthenticated, loginUser, setUserId, setUsername, setFirstName, setLastName, setToken} = useAuthStore()
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const { user, login } = useAuth();
   const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-  })
+    username: "",
+    password: "",
+  });
   const pathname = usePathname();
 
   useEffect(() => {
-	if (isAuthenticated) {
-		if (pathname === "/signin") {
-			router.replace("/dashboard");
-		}
-	} else if (!isAuthenticated) {
-		if (pathname !== "/signin") {
-			router.replace("/signin")
-		}
-	}
-}, [isAuthenticated, pathname, router]);
+    if (user) {
+      if (pathname === "/signin") {
+        router.replace("/dashboard");
+      }
+    } else if (!user && pathname !== "/signin") {
+      router.replace("/signin");
+    }
+  }, [user, pathname, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const response = await axios.post("/api/users/signin", {
-        username: formData.username, 
-        password: formData.password
-    })   
-    
-    if ( response?.data && typeof response.data === "object" && "token" in response.data && response.status === 200) {
-        const token = response.data.token as string; 
-        const decodedToken: decodedToken = jwtDecode(token);
-        setToken(token);
-		loginUser(token);
-        setUserId(decodedToken.user_id);
-        setUsername(decodedToken.username);
-        setFirstName(decodedToken.first_name);
-        setFirstName(decodedToken.last_name);
-        console.log('Form submitted:', formData)
-        router.push('/dashboard')
+    e.preventDefault();
+    try {
+      const response = await axios.post("/api/users/signin", {
+        username: formData.username,
+        password: formData.password,
+      });
+
+      if (
+        response?.data &&
+        typeof response.data === "object" &&
+        "token" in response.data &&
+        response.status === 200
+      ) {
+        const token = response.data.token as string;
+        const decodedToken: DecodedToken = JSON.parse(
+          atob(token.split(".")[1])
+        );
+
+        login({
+          user_id: decodedToken.user_id,
+          username: decodedToken.username,
+          first_name: decodedToken.first_name,
+          last_name: decodedToken.last_name,
+          email: formData.username, // Assuming username is the email
+          name: `${decodedToken.first_name} ${decodedToken.last_name}`, // Construct the name
+          token,
+        });
+
+        console.log("Form submitted:", formData);
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error("Error during sign-in:", error);
     }
-  }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   return (
     <div className="min-h-full bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
@@ -77,7 +97,8 @@ export default function SignIn() {
           className="flex-1 rounded-2xl bg-black dark:bg-white text-white dark:text-black p-8 flex flex-col justify-center h-full"
         >
           <blockquote className="text-2xl font-serif italic mb-4">
-            "Education is not the filling of a pail, but the lighting of a fire."
+            "Education is not the filling of a pail, but the lighting of a
+            fire."
           </blockquote>
           <p className="text-lg">- W.B. Yeats</p>
         </motion.div>
@@ -90,8 +111,12 @@ export default function SignIn() {
         >
           <Card className="w-full">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">Sign In to VideoSage</CardTitle>
-              <CardDescription>Welcome back! Please enter your details</CardDescription>
+              <CardTitle className="text-2xl font-bold">
+                Sign In to VideoSage
+              </CardTitle>
+              <CardDescription>
+                Welcome back! Please enter your details
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -146,7 +171,7 @@ export default function SignIn() {
             </CardContent>
             <CardFooter className="flex justify-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{" "}
                 <Link href="/signup" className="text-blue-600 hover:underline">
                   Sign Up
                 </Link>
@@ -156,5 +181,5 @@ export default function SignIn() {
         </motion.div>
       </div>
     </div>
-  )
+  );
 }

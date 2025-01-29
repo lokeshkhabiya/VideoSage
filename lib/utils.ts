@@ -57,7 +57,7 @@ export const initializePinecone = async () => {
 };
 export const preprocessTranscript = async (
     transcript: transcriptInterface[],
-    chunkSize = 300
+    chunkSize = 50
 ): Promise<
     { text: string; startTime: number | null; endTime: number | null }[]
 > => {
