@@ -17,7 +17,7 @@ const MessageBox = ({ role, content }: Props) => {
         "max-w-[80%]",
         isUser ? "bg-black text-white" : "bg-white text-black"
       )}>
-        <CardContent className='p-6 text-sm'>
+        <CardContent className='p-4 bg-white text-black dark:bg-gray-900 dark:text-white rounded-lg border text-sm'>
           <Markdown content={content} />
         </CardContent>
       </Card>

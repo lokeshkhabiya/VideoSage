@@ -6,30 +6,25 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/auth-provider";
 import { Home, Settings, LogOut, Plus } from "lucide-react";
-import { useState } from "react";
 import { CreateSpaceDialog } from "@/components/create-space-dialog";
 import Image from "next/image";
+import { useSpaces } from "@/hooks/space-provider";
 
 export function Sidebar() {
   const { user, logout } = useAuth();
+  const { spaces, addSpace } = useSpaces();
   const router = useRouter();
-
-  const [spaces, setSpaces] = useState([
-    { id: "default", name: "Default Space" },
-    { id: "web-dev", name: "Web Development" },
-    { id: "ai", name: "AI & Machine Learning" },
-  ]);
 
   const onCreateSpace = (name: string) => {
     const newSpace = {
       id: name.toLowerCase().replace(/\s+/g, "-"),
       name,
     };
-    setSpaces([...spaces, newSpace]);
+    addSpace(newSpace);
   };
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-full w-full dark:bg-gray-900">
       <div className="p-4 border-b">
         <Link href="/" className="flex items-center space-x-2">
           <VideoSageLogo className="h-6 w-6" />
@@ -44,27 +39,35 @@ export function Sidebar() {
               Dashboard
             </Link>
           </Button>
-          <div className="pt-4">
-            <h2 className="mb-2 px-2 text-lg font-semibold tracking-tight">
-              Spaces
-            </h2>
-            {spaces.map((space) => (
-              <Button
-                key={space.id}
-                variant="ghost"
-                className="w-full justify-start"
-                asChild
-              >
-                <Link href={`/dashboard/spaces/${space.id}`}>{space.name}</Link>
-              </Button>
-            ))}
-            <CreateSpaceDialog onCreateSpace={onCreateSpace}>
-              <Button variant="ghost" className="w-full justify-start">
-                <Plus className="mr-2 h-4 w-4 " />
-                Create New Space
-              </Button>
-            </CreateSpaceDialog>
-          </div>
+
+          {user && (
+            <div className="pt-4 space-y-2">
+              <div className="mb-2 space-y-2">
+                <h2 className="mb-3 px-2 text-lg font-semibold tracking-tight">
+                  Spaces
+                </h2>
+                {spaces.map((space) => (
+                  <Button
+                    key={space.id}
+                    variant="ghost"
+                    className="w-full justify-start border"
+                    asChild
+                  >
+                    <Link href={`/dashboard/spaces/${space.id}`}>
+                      {space.name}
+                    </Link>
+                  </Button>
+                ))}
+              </div>
+
+              <CreateSpaceDialog onCreateSpace={onCreateSpace}>
+                <Button variant="ghost" className="w-full justify-start">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create New Space
+                </Button>
+              </CreateSpaceDialog>
+            </div>
+          )}
         </nav>
       </ScrollArea>
       <div className="p-4 border-t">
@@ -92,5 +95,5 @@ export function Sidebar() {
 }
 
 function VideoSageLogo(props: React.SVGProps<SVGSVGElement>) {
-  return <Image alt="Logo" src={"/logo.png"} width="55" height="55"></Image>;
+  return <Image alt="Logo" src={"/logo.png"} width="55" height="55" />;
 }
