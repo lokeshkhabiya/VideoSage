@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createContext, useContext, ReactNode } from "react";
+import { useSpacesStore } from "@/hooks/space-provider";
 
 // User and Space Interfaces
 interface Space {
@@ -50,6 +51,7 @@ export const useAuthStore = create(
           user: userData,
           isAuthenticated: true,
         });
+        useSpacesStore.getState().resetSpaces();
       },
 
       // Logout function

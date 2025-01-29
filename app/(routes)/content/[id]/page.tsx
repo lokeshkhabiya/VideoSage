@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import ContentPage from "@/components/content/ContentPage";
+import ContentPage from "@/app/components/ContentPage";
 
 export default function Page() {
   const { id } = useParams();

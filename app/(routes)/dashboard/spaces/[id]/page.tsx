@@ -1,66 +1,70 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { Video, FileText, ArrowRight, Link2, Mic } from "lucide-react";
+import { Video, FileText } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/auth-provider";
+import { useSpaces } from "@/hooks/space-provider";
+
+/** Shape of each content item in the space. */
+interface ContentItem {
+  id: string;
+  type: string;
+  title?: string | null;
+  thumbnailUrl?: string | null;
+  createdAt?: string; // Updated to match space-provider.tsx
+}
+
+/** Shape of the space data. */
+interface SpaceItem {
+  id: string;
+  name: string;
+  createdAt?: string;
+  contents?: ContentItem[];
+}
 
 export default function SpacePage() {
   const { id } = useParams();
+  const { spaces, loading } = useSpaces();
+  const { isAuthenticated } = useAuth();
 
-  // This would typically come from an API/database
-  const space = {
-    id,
-    name:
-      id === "web-dev"
-        ? "Web Development"
-        : id === "ai"
-        ? "AI & Machine Learning"
-        : "Default Space",
-  };
+  // Show loading state if not authenticated or still loading spaces
+  if (!isAuthenticated || loading) {
+    return <p>Loading...</p>;
+  }
 
-  const content = [
-    {
-      id: "1",
-      title: "MongoDB Tutorial",
-      type: "video",
-      date: "2 hours ago",
-      thumbnail: "/placeholder.svg?height=100&width=200",
-    },
-    {
-      id: "2",
-      title: "React Fundamentals",
-      type: "video",
-      date: "1 day ago",
-      thumbnail: "/placeholder.svg?height=100&width=200",
-    },
-    {
-      id: "3",
-      title: "TypeScript Handbook",
-      type: "document",
-      date: "3 days ago",
-    },
-  ];
+  // Find the specific space by ID from the global store
+  const spaceData = spaces.find((space) => space.id === id) || null;
+
+  if (!spaceData) {
+    return <p>Space not found</p>;
+  }
 
   return (
     <div className="min-h-full dark:bg-gray-900">
       <main className="container py-6">
         <div className="flex flex-col space-y-8">
+          {/* Space Name */}
           <div className="flex flex-col space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">{space.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {spaceData.name}
+            </h1>
           </div>
 
+          {/* Contents Grid */}
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {content.map((item) => (
+            {spaceData.contents?.map((item) => (
               <Link
                 key={item.id}
                 href={`/content/${item.id}`}
                 className="group relative rounded-lg border overflow-hidden hover:border-primary transition-colors"
               >
-                {item.type === "video" ? (
+                {/* Render content type */}
+                {item.type === "YOUTUBE_CONTENT" ? (
                   <div className="aspect-video bg-muted relative">
                     <img
-                      src={item.thumbnail || "/placeholder.svg"}
-                      alt={item.title}
+                      src={item.thumbnailUrl || "/placeholder.svg"}
+                      alt={item.title || "No title"}
                       className="object-cover w-full h-full"
                     />
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
@@ -71,12 +75,15 @@ export default function SpacePage() {
                     <FileText className="h-8 w-8 text-muted-foreground" />
                   </div>
                 )}
+                {/* Content Details */}
                 <div className="p-4">
                   <h3 className="font-semibold tracking-tight group-hover:text-primary transition-colors">
-                    {item.title}
+                    {item.title || "Untitled"}
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {item.date}
+                    {item.createdAt
+                      ? new Date(item.createdAt).toLocaleDateString()
+                      : ""}
                   </p>
                 </div>
               </Link>
