@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Button } from "./ui/button";
@@ -7,16 +7,28 @@ import { Loader2, Send } from "lucide-react";
 import { Input } from "./ui/input";
 import { useChat } from "ai/react";
 import MessageBox from "./messageBox";
-import { useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/hooks/auth-provider";
+import { useSpaces } from "@/hooks/space-provider";
+import { useParams } from "next/navigation";
 
 type Props = {};
 
 const Chat = (props: Props) => {
-  const params = useSearchParams();
-  const video_id = params.get("video_id")?.split("?")[0] ?? "";
-  const content_id = params.get("video_id")?.split("?")[1]?.split("=")[1] ?? "";
+  const { id } = useParams();
+  const { spaces } = useSpaces();
+  const [youtube_id, setYoutubeId] = useState<string>("");
   const { user } = useAuthStore();
+
+  useEffect(() => {
+    for (const space of spaces) {
+      const content = space.contents?.find(content => content.id === id);
+      if (content) {
+        setYoutubeId(content.youtube_id);
+        break;
+      }
+    }
+  }, [spaces, id]);
+
 
   const { messages, input, handleInputChange, handleSubmit, isLoading } =
     useChat({
@@ -25,6 +37,7 @@ const Chat = (props: Props) => {
         Authorization: `${user?.token}`,
       },
     });
+
 
   return (
     <Card className="h-full flex flex-col">
@@ -53,8 +66,7 @@ const Chat = (props: Props) => {
             event.preventDefault();
             handleSubmit(event, {
               data: {
-                content_id: content_id,
-                video_id: video_id,
+                video_id: youtube_id,
               },
             });
           }}

@@ -23,26 +23,28 @@ export async function POST(req: NextRequest) {
     const userQuestion = messages[messages.length - 1].content;
     
     const searchQuery = `Represent this sentence for searching relevant passages:${userQuestion}`
-
-    const retrievals = await queryPineconeVectorStore(pc, "youtube-content", "videosage-namespace-2", searchQuery, video_id);
+    const retrievals = await queryPineconeVectorStore(pc, "youtube-content", "videosage-namespace-2", video_id, searchQuery);
 
     // final prompt to gemini api
-    const finalPrompt = `You are an intelligent assistant having a natural conversation about the video content. You aim to be helpful, accurate and engaging in your responses.
+    const finalPrompt = `You are a helpful and informative assistant designed to answer questions about YouTube videos.  You will be provided with:
 
-    Context:
-    - You have deep understanding of the video content
-    - You can reference specific moments in the video using timestamps
-    - You maintain context from previous messages in the conversation
-    - You speak naturally while being precise and informative
-    
-    Instructions:
-    1. Provide clear, direct answers that flow naturally
-    2. Include relevant timestamps when discussing specific points
-    3. Add helpful context to enrich the explanation
-    4. Use a conversational, engaging tone
-    5. Structure responses to be easy to follow
-    6. Reference concrete examples to illustrate points
-    
+    1.  **The user's question:** (This will be dynamically inserted.)
+    2.  **Contextual information retrieved from the video's transcript and metadata:** (This will be dynamically inserted as relevant chunks from the vector database.)
+
+    Your goal is to provide a concise, accurate, and helpful answer to the user's question, drawing information from the provided context.  If the context does not contain the answer, don't state that you cannot answer the question based on the available information.
+
+    **Important Instructions:**
+
+    *   **Base your answer on the provided context.**  you may use any external knowledge or information beyond what is given only to explain the topic in a better way.
+    *   **Provide the most relevant parts of the transcript as citations to support your answer.**  Indicate the start in the transcript, when referring to the transcript. Format the timestamp as [MM:SS].
+    *   **If you don't have the information necessary to answer the question based on the provided context, state that you cannot answer it and briefly explain why.** E.g., "I'm sorry, but the provided context does not contain information, but according to me..." 
+    *   **Focus on answering the specific question.**  Avoid generating overly verbose or conversational responses.
+    *   **Be concise and avoid unnecessary fluff.**
+    *   **Do not provide information about the overall video content or structure unless explicitly asked.** Your focus is on answering the user's specific question based on the retrieved transcript chunks.
+    *   **Do not include a conversational intro or outro. Just get to the answer.**
+
+    **Context:**
+
     User Question: ${userQuestion}
     
     Reference Context:

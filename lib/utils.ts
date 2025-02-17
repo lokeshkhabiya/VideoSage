@@ -167,7 +167,7 @@ export const generateFlashCards = async (transcripts: string) => {
                       },
                       {
                         "question": "What does 'OOP' stand for in programming?",
-                        "hint": "It’s related to a paradigm focusing on 'objects.'",
+                        "hint": "It's related to a paradigm focusing on 'objects.'",
                         "answer": "Object-Oriented Programming.",
                         "explanation": "OOP is a programming paradigm based on the concept of objects containing data and methods for data manipulation.",
                         "source": "N/A"
@@ -239,18 +239,22 @@ export async function queryPineconeVectorStore(
     const queryEmbedding = Array.from(hfoutput);
 
     const index = client.index(indexname);
+
     const queryResponse = await index.namespace(namespace).query({
         topK: 5,
         vector: queryEmbedding as any,
         includeMetadata: true,
         includeValues: false,
+        filter: {
+            video_id: { "$eq": video_id },
+        },
     });
 
     if (queryResponse.matches.length > 0) {
         const concatRetrievals = queryResponse.matches.map((match, idx) => {
             return `\n Transcript chunks findings ${idx + 1}: \n ${match.metadata?.text} \n chunk timestamp startTime: ${match.metadata?.startTime} & endTime: ${match.metadata?.endTime}`
         }).join(`\n\n`)
-        
+
         return concatRetrievals
     } else {
         return "<no match>";

@@ -37,6 +37,8 @@ export default function QuizTab({
   const { user } = useAuth();
 
   useEffect(() => {
+    if (activeMainTab !== value) return; // Only proceed if this tab is active
+    
     setIsLoading(true);
     // Find the content across all spaces
     for (const space of spaces) {
@@ -56,7 +58,8 @@ export default function QuizTab({
               authorization: user?.token
             }
           });
-// @ts-ignore
+          
+          // @ts-ignore
           if (response?.data?.data?.questions) {
             // @ts-ignore
             setQuizData(response.data.data.questions);
@@ -70,7 +73,7 @@ export default function QuizTab({
 
       fetchData();
     }
-  }, [spaces, id, youtube_id, content_id]);
+  }, [spaces, id, youtube_id, content_id, activeMainTab, value]);
 
   const handleAnswerSelect = (qIndex: number, oIndex: number) => {
     setSelectedAnswers(prev => ({
