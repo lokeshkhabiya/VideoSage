@@ -2,7 +2,6 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { YoutubeTranscript } from "youtube-transcript";
 import { Pinecone } from "@pinecone-database/pinecone";
-import { FeatureExtractionPipeline } from "@xenova/transformers";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { HfInference } from "@huggingface/inference";
 
@@ -92,22 +91,22 @@ export const preprocessTranscript = async (
 
 export const generateEmbeddings = async (
     chunks: any,
-    embeddingPipeline: FeatureExtractionPipeline,
     video_id: string
 ) => {
     return Promise.all(
         chunks.map(async (chunk: any, i: number) => {
-            const embedding = await embeddingPipeline(chunk.text, {
-                pooling: "mean",
-                normalize: true,
+            const embedding = await hf.featureExtraction({
+                model: 'mixedbread-ai/mxbai-embed-large-v1',
+                inputs: chunk.text
             });
+            
             return {
                 id: `${video_id}-chunk-${i}`,
                 video_id: video_id,
                 text: chunk.text,
                 startTime: chunk.startTime,
                 endTime: chunk.endTime,
-                vector: embedding.data,
+                vector: Array.from(embedding),
             };
         })
     );

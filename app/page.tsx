@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Sparkles,
 } from "lucide-react";
+import { useAuthStore } from "@/hooks/auth-provider";
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -19,8 +20,23 @@ const fadeIn = {
 };
 
 export default function Home() {
+
+  const { isAuthenticated } = useAuthStore(); 
+
+  const handleRedirect = () => {
+    if (isAuthenticated) {
+      if (typeof window != undefined) {
+        window.location.replace("/dashboard")
+      }
+    } else {
+      if (typeof window != undefined) {
+        window.location.replace("/signup")
+      }
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-300 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-500 px-4">
       <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-gray-900 [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#63e_100%)] dark:[background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)] opacity-30"></div>
 
       <main className="container mx-auto ">
@@ -34,7 +50,7 @@ export default function Home() {
             className="text-5xl md:text-6xl font-bold text-gray-800 dark:text-white mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
           >
             Unlock the Power of Video Learning
           </motion.h1>
@@ -42,7 +58,7 @@ export default function Home() {
             className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.4 }}
           >
             VideoSage transforms your YouTube learning experience with
             AI-powered tools for better understanding and interaction.
@@ -50,23 +66,24 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.6 }}
           >
             <div className="space-x-4">
               <Button
                 variant="ghost"
                 className="bg-gray-900 border text-white p-5 text-md"
                 asChild
+                onClick={handleRedirect}
               >
-                <Link href="/signup">Sign Up</Link>
+                <Link href="/signup">Get Started</Link>
               </Button>
-              <Button
+              {/* <Button
                 className="dark:bg-gray-900 border p-5 text-md"
                 variant="ghost"
                 asChild
               >
                 <Link href="/signin">Sign in</Link>
-              </Button>
+              </Button> */}
             </div>
           </motion.div>
         </motion.section>
@@ -77,7 +94,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-12 text-center">
             Powerful Features
@@ -129,11 +146,11 @@ export default function Home() {
             ].map((feature, index) => (
               <motion.div
                 key={index}
-                className={`p-6 rounded-xl ${feature.color} backdrop-blur-sm transform transition-all duration-500 ease-in-out hover:scale-110 hover:shadow-xl`}
+                className={`p-6 rounded-xl ${feature.color} backdrop-blur-sm transform transition-all duration-700 ease-out hover:scale-105`}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                transition={{ duration: 0.7, ease: "easeOut", delay: index * 0.15 }}
               >
                 <feature.icon className="h-12 w-12 text-blue-600 dark:text-blue-400 mb-4" />
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
@@ -152,7 +169,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
             Ready to Enhance Your Learning?

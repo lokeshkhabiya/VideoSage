@@ -17,7 +17,6 @@ const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! })
 export async function POST(req: NextRequest) {
     const reqBody = await req.json();
     const video_id = reqBody.data.video_id
-    const content_id = reqBody.data.content_id
 
     const messages: Message[] = reqBody.messages;
     const userQuestion = messages[messages.length - 1].content;

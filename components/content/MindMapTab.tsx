@@ -79,7 +79,7 @@ export default function MindMapTab({
 
       fetchMindMap();
     }
-  }, [spaces, id, youtube_id, content_id, activeMainTab, value, user?.token]);
+  }, [spaces, id, youtube_id, content_id, user?.token]);
 
   // Initialize the diagram
   function initDiagram() {

@@ -1,6 +1,5 @@
 import { fetchTranscripts, generateEmbeddings, initializePinecone, preprocessTranscript, transcriptInterface, upsertChunksToPinecone } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
-import { pipeline } from "@xenova/transformers";
 import prisma from "@/lib/prisma"
 import { v4 as uuid } from "uuid"
 import axios from "axios";
@@ -105,7 +104,6 @@ export async function POST(req: NextRequest) {
             await prisma.content.create({
                 data: {
                     content_id: contentId,
-                    space_id: space_id || null,
                     content_type: "YOUTUBE_CONTENT",
                     created_at: new Date(),
                     youtubeContent: {
@@ -128,12 +126,7 @@ export async function POST(req: NextRequest) {
 
             // Vector processing
             const pineconeIndex = await initializePinecone();
-            const embeddingPipeline = await pipeline("feature-extraction", "mixedbread-ai/mxbai-embed-large-v1", {
-                revision: "main",
-                quantized: false
-            });
-            
-            const embeddedChunks = await generateEmbeddings(processedTranscriptChunks, embeddingPipeline, video_id);
+            const embeddedChunks = await generateEmbeddings(processedTranscriptChunks, video_id);
             await upsertChunksToPinecone(pineconeIndex, embeddedChunks);
         }
 

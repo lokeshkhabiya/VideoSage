@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import prisma from "@/lib/prisma";
 import axios from "axios";
 import { v4 as uuid } from "uuid";
-import { pipeline } from "@xenova/transformers";
 
 // These imports match your original route's transcript & embedding logic
 import {
@@ -234,17 +233,8 @@ export async function POST(req: NextRequest) {
       // 7B) Vector Embeddings (Pinecone)
       //     (Only do this once for brand-new videos)
       const pineconeIndex = await initializePinecone();
-      const embeddingPipeline = await pipeline(
-        "feature-extraction",
-        "mixedbread-ai/mxbai-embed-large-v1",
-        {
-          revision: "main",
-          quantized: false,
-        }
-      );
       const embeddedChunks = await generateEmbeddings(
         processedTranscriptChunks,
-        embeddingPipeline,
         videoId
       );
       await upsertChunksToPinecone(pineconeIndex, embeddedChunks);
