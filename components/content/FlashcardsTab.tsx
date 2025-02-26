@@ -99,76 +99,74 @@ export default function FlashcardsTab({
             <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
               <div className="relative flex-1">
                 {flashcards.length > 0 && (
-                  <div 
-                    className={`absolute inset-0 rounded-xl border bg-card p-6 cursor-pointer transition-all duration-500 ${
-                      showAnswer ? "[transform:rotateY(180deg)]" : ""
-                    }`}
-                    style={{
-                      transformStyle: "preserve-3d",
-                      backfaceVisibility: "hidden",
-                      WebkitBackfaceVisibility: "hidden"
-                    }}
-                    onClick={() => !showAnswer && setShowAnswer(true)}
-                  >
+                  <div className="relative w-full h-full">
                     <div 
-                      className={`text-center space-y-4 ${
-                        showAnswer ? "[transform:rotateY(180deg)]" : ""
+                      className={`absolute inset-0 rounded-xl border bg-card p-6 transition-all duration-500 ${
+                        showAnswer ? "[transform:rotateY(180deg)] pointer-events-none" : ""
                       }`}
                       style={{
+                        transformStyle: "preserve-3d",
+                        backfaceVisibility: "hidden",
+                        WebkitBackfaceVisibility: "hidden"
+                      }}
+                      onClick={() => !showAnswer && setShowAnswer(true)}
+                    >
+                      <div className="text-center space-y-4">
+                        <p className="text-xl font-medium">
+                          {flashcards[currentFlashcard].question}
+                        </p>
+                        
+                        <Button 
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowHint(true);
+                          }}
+                        >
+                          Show Hint
+                        </Button>
+
+                        {showHint && (
+                          <p className="text-sm text-muted-foreground">
+                            {flashcards[currentFlashcard].hint}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div 
+                      className={`absolute inset-0 rounded-xl border bg-card p-6 transition-all duration-500 [transform:rotateY(-180deg)] ${
+                        showAnswer ? "[transform:rotateY(0deg)]" : "pointer-events-none"
+                      }`}
+                      style={{
+                        transformStyle: "preserve-3d",
                         backfaceVisibility: "hidden",
                         WebkitBackfaceVisibility: "hidden"
                       }}
                     >
-                      {!showAnswer ? (
-                        <>
-                          <p className="text-xl font-medium">
-                            {flashcards[currentFlashcard].question}
-                          </p>
-                          
-                          <Button 
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowHint(true);
-                            }}
-                          >
-                            Show Hint
-                          </Button>
+                      <div className="text-center space-y-4">
+                        <p className="text-lg">
+                          {flashcards[currentFlashcard].answer}
+                        </p>
+                        
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowExplanation(true)}
+                        >
+                          Show Explanation
+                        </Button>
 
-                          {showHint && (
+                        {showExplanation && (
+                          <div className="space-y-2">
                             <p className="text-sm text-muted-foreground">
-                              {flashcards[currentFlashcard].hint}
+                              {flashcards[currentFlashcard].explanation}
                             </p>
-                          )}
-                        </>
-                      ) : (
-                        <div className="space-y-4">
-                          <p className="text-lg">
-                            {flashcards[currentFlashcard].answer}
-                          </p>
-                          
-                          <Button
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowExplanation(true);
-                            }}
-                          >
-                            Show Explanation
-                          </Button>
-
-                          {showExplanation && (
-                            <div className="space-y-2">
-                              <p className="text-sm text-muted-foreground">
-                                {flashcards[currentFlashcard].explanation}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Source: {flashcards[currentFlashcard].source}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                            <p className="text-xs text-muted-foreground">
+                              Source: {flashcards[currentFlashcard].source}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

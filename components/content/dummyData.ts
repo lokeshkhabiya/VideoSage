@@ -1,19 +1,3 @@
-export const dummyChapters = [
-  {
-    time: "00:00",
-    duration: "5:00",
-    title: "Introduction to MongoDB",
-    description: "Overview of MongoDB...",
-  },
-  {
-    time: "05:00",
-    duration: "10:00",
-    title: "Document Model & BSON",
-    description: "Understanding MongoDB...",
-  },
-  /* ... etc ... */
-];
-
 export const dummyTranscript = [
   { time: "0:00", text: "Welcome to this comprehensive MongoDB tutorial..." },
   /* ... etc ... */

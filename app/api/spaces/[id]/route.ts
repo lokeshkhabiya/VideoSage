@@ -26,7 +26,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 
     // 2) Verify JWT
     const payload = await verifyJwtToken(token, process.env.JWT_SECRET!);
-    const userId = payload.user_id;
+    const userId = payload?.user_id;
     if (!userId) {
       return NextResponse.json(
         { message: "Invalid token: missing user_id" },

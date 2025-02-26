@@ -14,12 +14,6 @@ interface LeftPanelProps {
   id: string;
   activeVideoTab: string;
   setActiveVideoTab: (value: string) => void;
-  dummyChapters: {
-    time: string;
-    duration: string;
-    title: string;
-    description: string;
-  }[];
 }
 
 interface TranscriptSegment {
@@ -31,11 +25,9 @@ export default function LeftPanel({
   id,
   activeVideoTab,
   setActiveVideoTab,
-  dummyChapters,
 }: LeftPanelProps) {
   // const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptSegment[]>([]);
-  const [chapters, setChapters] = useState(dummyChapters);
   // const [currentThumbnail, setCurrentThumbnail] = useState(thumbnailUrl);
   const [_, setYoutubeUrl] = useState("");
   const [youtube_id, setYoutube_id] = useState("");
@@ -133,37 +125,9 @@ export default function LeftPanel({
             onValueChange={setActiveVideoTab}
             className="w-full h-full flex flex-col"
           >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="chapters">Chapters</TabsTrigger>
-              <TabsTrigger value="transcript">Transcript</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-1">
+              <TabsTrigger value="transcript" className="w-full">Transcript</TabsTrigger>
             </TabsList>
-
-            <TabsContent
-              value="chapters"
-              className="flex-1 min-h-0 overflow-hidden"
-            >
-              <ScrollArea className="h-full">
-                {chapters.map((chapter, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-col space-y-2 p-4 hover:bg-muted/50 rounded-lg cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        {chapter.time}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {chapter.duration}
-                      </span>
-                    </div>
-                    <h3 className="font-medium">{chapter.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {chapter.description}
-                    </p>
-                  </div>
-                ))}
-              </ScrollArea>
-            </TabsContent>
 
             <TabsContent
               value="transcript"

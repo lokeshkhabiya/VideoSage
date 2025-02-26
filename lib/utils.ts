@@ -134,7 +134,51 @@ export const upsertChunksToPinecone = async (index: any, chunks: any) => {
 };
 
 export const summarizeChunks = async (transcripts: string) => {
-    const prompt = `You are a summarization assistant. Please provide a concise summary of the following YouTube video transcript in 300 words latest. Focus on the key points and main ideas discussed in the video. Give summary in structured manner. Do not include any introductory phrases or timestamps - just provide the direct summary of the content.`;
+    const prompt = `You are an expert content summarizer specializing in creating comprehensive, well-structured video summaries. Create a detailed summary of this YouTube video transcript that is both informative and easy to read.
+
+    **Summary Structure:**
+
+    1. **Overview** (2-3 sentences)
+    - Provide a concise introduction to the main topic/purpose
+    - Highlight the key takeaway
+
+    2. **Key Topics Covered**
+    - Break down major topics into clear sections
+    - Use bullet points for important subtopics
+    - Maintain logical flow from basic to advanced concepts
+
+    3. **Main Points & Insights**
+    - Present detailed explanations of core concepts
+    - Include any significant examples or case studies
+    - Highlight practical applications or recommendations
+
+    4. **Technical Details** (if applicable)
+    - List any tools, technologies, or methodologies discussed
+    - Include specific steps, processes, or implementations
+    - Note any best practices or guidelines mentioned
+
+    5. **Key Takeaways**
+    - Summarize 3-5 most important learnings
+    - Include any concluding thoughts or recommendations
+
+    **Formatting Guidelines:**
+    * Use clear headings and subheadings
+    * Implement proper spacing between sections
+    * Use bullet points and numbered lists for better readability
+    * Keep paragraphs concise (3-4 sentences maximum)
+    * Bold important terms or concepts
+    * Use markdown formatting for better structure
+
+    **Important Notes:**
+    * Aim for approximately 500-700 words
+    * Focus on accuracy and completeness
+    * Maintain a professional, educational tone
+    * Avoid repetition and filler content
+    * Do not include timestamps or references to the video format
+    * Do not use introductory phrases like "In this video" or "The speaker discusses"
+
+    Please provide a clear, comprehensive summary following these guidelines.`;
+
     const generateContent = await model.generateContent([prompt, transcripts]);
     return generateContent?.response?.text();
 };

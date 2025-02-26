@@ -1,10 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Tabs } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import useIsMobile from "@/hooks/useIsMobile";
 
 import {
@@ -21,8 +17,6 @@ import RightPanel from "./RightPanel";
  * import it here. Otherwise, keep them in this file as you originally had.
  */
 import {
-  dummyChapters,
-  dummyTranscript,
   dummyChatMessages,
   dummyFlashcards,
   dummySummary,
@@ -30,9 +24,6 @@ import {
   dummyQuiz,
   dummyMindMap,
 } from "./dummyData";
-
-/* Icons */
-import { Send, RotateCcw, ChevronRight } from "lucide-react";
 
 interface ContentPageProps {
   id: string; // from useParams
@@ -42,7 +33,7 @@ export default function ContentPage({ id }: ContentPageProps) {
   const isMobile = useIsMobile();
 
   const [activeMainTab, setActiveMainTab] = useState("chat");
-  const [activeVideoTab, setActiveVideoTab] = useState("chapters");
+  const [activeVideoTab, setActiveVideoTab] = useState("transcript");
   const [chatInput, setChatInput] = useState("");
   const [currentFlashcard, setCurrentFlashcard] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -86,8 +77,6 @@ export default function ContentPage({ id }: ContentPageProps) {
                 id={id}
                 activeVideoTab={activeVideoTab}
                 setActiveVideoTab={setActiveVideoTab}
-                dummyChapters={dummyChapters}
-                // dummyTranscript={dummyTranscript}
               />
             </ResizablePanel>
 

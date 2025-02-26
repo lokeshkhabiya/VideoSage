@@ -60,17 +60,6 @@ export default function RightPanel({
   setChatInput,
   handleChatSubmit,
   dummyChatMessages,
-  dummyQuiz,
-  selectedAnswers,
-  handleAnswerSelect,
-  dummyFlashcards,
-  currentFlashcard,
-  setCurrentFlashcard,
-  isFlipped,
-  setIsFlipped,
-  dummySummary,
-  dummyTakeaways,
-  dummyMindMap,
 }: RightPanelProps) {
   return (
     <div className="h-full w-full p-4 flex flex-col min-h-0">
@@ -104,42 +93,26 @@ export default function RightPanel({
 
         <ChatTab
           value="chat"
-          activeMainTab={activeMainTab}
-          chatInput={chatInput}
-          setChatInput={setChatInput}
-          handleChatSubmit={handleChatSubmit}
-          dummyChatMessages={dummyChatMessages}
         />
 
         <QuizTab
           value="quiz"
           activeMainTab={activeMainTab}
-          dummyQuiz={dummyQuiz}
-          selectedAnswers={selectedAnswers}
-          handleAnswerSelect={handleAnswerSelect}
         />
 
         <FlashcardsTab
           value="flashcards"
           activeMainTab={activeMainTab}
-          dummyFlashcards={dummyFlashcards}
-          currentFlashcard={currentFlashcard}
-          setCurrentFlashcard={setCurrentFlashcard}
-          isFlipped={isFlipped}
-          setIsFlipped={setIsFlipped}
         />
 
         <SummaryTab
           value="summary"
           activeMainTab={activeMainTab}
-          dummySummary={dummySummary}
-          dummyTakeaways={dummyTakeaways}
         />
 
         <MindMapTab
           value="mindmap"
           activeMainTab={activeMainTab}
-          dummyMindMap={dummyMindMap}
         />
       </Tabs>
     </div>

@@ -29,7 +29,6 @@ const Chat = (props: Props) => {
     }
   }, [spaces, id]);
 
-
   const { messages, input, handleInputChange, handleSubmit, isLoading } =
     useChat({
       api: "../api/generate/chat",
@@ -37,7 +36,6 @@ const Chat = (props: Props) => {
         Authorization: `${user?.token}`,
       },
     });
-
 
   return (
     <Card className="h-full flex flex-col">
@@ -58,6 +56,15 @@ const Chat = (props: Props) => {
               />
             );
           })}
+          {isLoading && (
+            <div className="flex items-center space-x-2 p-4">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-primary rounded-full animate-[bounce_1s_infinite_0ms]"></div>
+                <div className="w-2 h-2 bg-primary rounded-full animate-[bounce_1s_infinite_200ms]"></div>
+                <div className="w-2 h-2 bg-primary rounded-full animate-[bounce_1s_infinite_400ms]"></div>
+              </div>
+            </div>
+          )}
         </div>
       </ScrollArea>
       <div className="p-4 border-t">
@@ -85,7 +92,6 @@ const Chat = (props: Props) => {
             ) : (
               <Send className="h-4 w-4" />
             )}
-            {/* <span className="sr-only">Send message</span> */}
           </Button>
         </form>
       </div>
