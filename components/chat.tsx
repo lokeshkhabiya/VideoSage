@@ -11,9 +11,7 @@ import { useAuthStore } from "@/hooks/auth-provider";
 import { useSpaces } from "@/hooks/space-provider";
 import { useParams } from "next/navigation";
 
-type Props = {};
-
-const Chat = (props: Props) => {
+const Chat = () => {
   const { id } = useParams();
   const { spaces } = useSpaces();
   const [youtube_id, setYoutubeId] = useState<string>("");

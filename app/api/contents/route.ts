@@ -49,9 +49,9 @@ export async function POST(req: NextRequest) {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    let decoded: any;
+    let decoded: { user_id?: string };
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!);
+      decoded = jwt.verify(token, process.env.JWT_SECRET!) as { user_id?: string };
       // Replace "secret_key" with your real JWT secret or env var
     } catch (err) {
       console.error("JWT verification failed:", err);
@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
     const metadataResponse = await axios.get(
       `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${process.env.YOUTUBE_APIKEY}`
     );
-    const metadata = metadataResponse.data as { items: { snippet: any }[] };
+    const metadata = metadataResponse.data as { items: { snippet: { title: string; description: string; thumbnails: { standard: { url: string } } } }[] };
     if (!metadata.items || metadata.items.length === 0) {
       return NextResponse.json(
         { error: "Could not fetch YouTube video metadata" },
@@ -166,7 +166,6 @@ export async function POST(req: NextRequest) {
 
     // We'll store the final content_id here
     let contentId: string;
-    let isNewVideo = false;
 
     // Processed transcript chunks (for embedding)
     const processedTranscriptChunks = await preprocessTranscript(transcript);
@@ -199,7 +198,6 @@ export async function POST(req: NextRequest) {
     } else {
       // Create entirely new content + youtubeContent
       contentId = uuid();
-      isNewVideo = true;
 
       // 7A) Create the parent Content record
       await prisma.content.create({

@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
   // See https://nextjs.org/docs/pages/api-reference/next-config-js/output#automatically-copying-traced-files
   output: 'standalone', // Feel free to modify/remove this option
   
+  // Configure allowed image domains
+  images: {
+    domains: ['i.ytimg.com'],
+  },
+  
   // Update the experimental options
   serverExternalPackages: ['sharp', 'onnxruntime-node'],
   webpack: (config, { isServer }) => {

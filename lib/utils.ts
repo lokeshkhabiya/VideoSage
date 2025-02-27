@@ -1,18 +1,39 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { YoutubeTranscript } from "youtube-transcript";
-import { Pinecone } from "@pinecone-database/pinecone";
+import { Pinecone, Index } from "@pinecone-database/pinecone";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { HfInference } from "@huggingface/inference";
 
 const hf = new HfInference(process.env.HF_TOKEN!)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
 export interface transcriptInterface {
     text: string;
     duration: number;
     offset: number;
     lang: string;
+}
+
+interface ChunkData {
+    id: string;
+    video_id: string;
+    text: string;
+    startTime: number;
+    endTime: number;
+    vector: number[];
+}
+
+interface PineconeVector {
+    id: string;
+    values: number[];
+    metadata: {
+        video_id: string;
+        text: string;
+        startTime: number;
+        endTime: number;
+    };
 }
 
 export function cn(...inputs: ClassValue[]) {
@@ -37,7 +58,7 @@ export async function fetchTranscripts(
         );
 
         return formattedTranscript;
-    } catch (transcriptError: any) {
+    } catch (transcriptError: unknown) {
         console.error("Error fetching transcript:", transcriptError);
         return null;
     }
@@ -90,11 +111,11 @@ export const preprocessTranscript = async (
 };
 
 export const generateEmbeddings = async (
-    chunks: any,
+    chunks: { text: string; startTime: number | null; endTime: number | null }[],
     video_id: string
 ) => {
     return Promise.all(
-        chunks.map(async (chunk: any, i: number) => {
+        chunks.map(async (chunk, i) => {
             const embedding = await hf.featureExtraction({
                 model: 'mixedbread-ai/mxbai-embed-large-v1',
                 inputs: chunk.text
@@ -107,14 +128,14 @@ export const generateEmbeddings = async (
                 startTime: chunk.startTime,
                 endTime: chunk.endTime,
                 vector: Array.from(embedding),
-            };
+            } as ChunkData;
         })
     );
 };
 
-export const upsertChunksToPinecone = async (index: any, chunks: any) => {
+export const upsertChunksToPinecone = async (index: Index, chunks: ChunkData[]) => {
     // Ensure vectors is an array and matches Pinecone's expected format
-    const vectors = chunks.map((chunk: any) => ({
+    const vectors: PineconeVector[] = chunks.map((chunk) => ({
         id: chunk.id,
         values: Array.from(chunk.vector), // Convert to regular array if it's not already
         metadata: {
@@ -285,7 +306,7 @@ export async function queryPineconeVectorStore(
 
     const queryResponse = await index.namespace(namespace).query({
         topK: 5,
-        vector: queryEmbedding as any,
+        vector: queryEmbedding as number[],
         includeMetadata: true,
         includeValues: false,
         filter: {

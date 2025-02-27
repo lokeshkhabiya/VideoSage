@@ -7,8 +7,7 @@ import {
   ResizablePanelGroup,
   ResizableHandle,
 } from "@/components/ui/resizable";
-import { useState, useEffect } from "react";
-import { Play } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 
 interface LeftPanelProps {
   id: string;
@@ -29,7 +28,6 @@ export default function LeftPanel({
   // const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptSegment[]>([]);
   // const [currentThumbnail, setCurrentThumbnail] = useState(thumbnailUrl);
-  const [_, setYoutubeUrl] = useState("");
   const [youtube_id, setYoutube_id] = useState("");
 
   // Transcript parser function
@@ -42,12 +40,11 @@ export default function LeftPanel({
     }));
   };
 
-  const fetchTranscriptAndVideoDetails = async () => {
+  const fetchTranscriptAndVideoDetails = useCallback(async () => {
     try {
       const res = await fetch(`/api/contents?id=${id}`);
       if (!res.ok) throw new Error("Failed to fetch video details");
       const data = await res.json();
-      setYoutubeUrl(data.youtubeUrl);
       setYoutube_id(data.youtube_id);
       // setCurrentThumbnail(data.thumbnailUrl);
 
@@ -57,30 +54,30 @@ export default function LeftPanel({
     } catch (error) {
       console.error("Error fetching transcript and video details:", error);
     }
-  };
+  }, [id]);
 
-  const fetchChapters = async () => {
+  const fetchChapters = useCallback(async () => {
     try {
       const res = await fetch(`/api/contents?id=${id}`); // Replace with the actual chapters route
       if (!res.ok) throw new Error("Failed to fetch chapters");
-      const data = await res.json();
+      await res.json();
       // setChapters(data.chapters); // Assuming chapters are part of the API response
     } catch (error) {
       console.error("Error fetching chapters:", error);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     // Fetch transcript and video details on mount
     fetchTranscriptAndVideoDetails();
-  }, [id]);
+  }, [id, fetchTranscriptAndVideoDetails]);
 
   useEffect(() => {
     if (activeVideoTab === "chapters") {
       // Fetch chapters when switching to the chapters tab
       fetchChapters();
     }
-  }, [activeVideoTab]);
+  }, [activeVideoTab, fetchChapters]);
 
   return (
     <div className="w-full h-full p-4 flex flex-col space-y-4 min-h-0">
@@ -96,18 +93,16 @@ export default function LeftPanel({
           className="min-h-0 h-fit w-auto"
         >
           <div className="aspect-video rounded-lg overflow-hidden bg-black h-fit w-auto">
-            (
-              // Render YouTube iframe if video is playing
-              <iframe
-                width="100%"
-                height="100%"
-                src={`https://www.youtube.com/embed/${youtube_id}`}
-                title="Video Player"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full"
-              ></iframe>
-            )
+            {/* Render YouTube iframe if video is playing */}
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${youtube_id}`}
+              title="Video Player"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full"
+            ></iframe>
           </div>
         </ResizablePanel>
 

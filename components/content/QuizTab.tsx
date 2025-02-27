@@ -59,9 +59,9 @@ export default function QuizTab({
             }
           });
           
-          // @ts-ignore
+          // @ts-expect-error response.data.data type is unknown
           if (response?.data?.data?.questions) {
-            // @ts-ignore
+            // @ts-expect-error response.data.data.questions type is unknown
             setQuizData(response.data.data.questions);
           }
         } catch (error) {
@@ -73,7 +73,7 @@ export default function QuizTab({
 
       fetchData();
     }
-  }, [spaces, id, youtube_id, content_id, activeMainTab, value]);
+  }, [spaces, id, youtube_id, content_id, activeMainTab, value, user?.token]);
 
   const handleAnswerSelect = (qIndex: number, oIndex: number) => {
     setSelectedAnswers(prev => ({

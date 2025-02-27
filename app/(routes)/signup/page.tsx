@@ -46,14 +46,18 @@ export default function SignUp() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const response = await axios.post("/api/users/signup", {
-      username: formData.username,
-      first_name: formData.firstName,
-      last_name: formData.lastName,
-      password: formData.password,
-    });
+    try {
+      await axios.post("/api/users/signup", {
+        username: formData.username,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        password: formData.password,
+      });
 
-    router.push("/dashboard");
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Signup failed:", error);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,8 +74,8 @@ export default function SignUp() {
           className="flex-1 rounded-2xl bg-black dark:bg-white text-white dark:text-black p-8 flex flex-col justify-center h-full"
         >
           <blockquote className="text-2xl font-serif italic mb-4">
-            "Education is not the filling of a pail, but the lighting of a
-            fire."
+            &ldquo;Education is not the filling of a pail, but the lighting of a
+            fire.&rdquo;
           </blockquote>
           <p className="text-lg">- W.B. Yeats</p>
         </motion.div>

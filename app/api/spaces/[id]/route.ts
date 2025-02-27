@@ -2,20 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyJwtToken } from "@/lib/jwt";
 import prisma from "@/lib/prisma";
 
-interface Params {
-  params: {
-    id: string;
-  };
-}
-
 /**
  * GET /api/spaces/[id]
  * Fetches a single space by ID, ensuring it belongs to the logged-in user.
  * Also includes the space's content items (YoutubeContent, DocumentContent, etc.)
  */
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(
+  request: NextRequest,
+) {
   try {
-    const spaceId =  params.id;
+    const params = request.nextUrl.searchParams;
+    const spaceId = params.get("space_id") || "";
 
     // 1) Extract Bearer token
     const authHeader = request.headers.get("Authorization") || "";

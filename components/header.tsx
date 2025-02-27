@@ -64,7 +64,7 @@ export function Header() {
           </div>
           <div className=" flex items-center justify-center md:justify-start">
             <Link className="flex items-center space-x-1" href="/">
-              <VideoSageLogo className="w-4 h-4 md:h-8 md:w-8" />
+              <VideoSageLogo />
               <span className="font-bold text-md md:text-2xl">VideoSage</span>
             </Link>
           </div>
@@ -111,6 +111,6 @@ export function Header() {
   );
 }
 
-function VideoSageLogo(props: React.SVGProps<SVGSVGElement>) {
+function VideoSageLogo() {
   return <Image src={"/logo.png"} alt="Logo" width="55" height="55"></Image>;
 }

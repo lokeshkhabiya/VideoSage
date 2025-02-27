@@ -4,6 +4,16 @@ import prisma from "@/lib/prisma"
 import { v4 as uuid } from "uuid"
 import axios from "axios";
 
+interface VideoMetadata {
+  title: string;
+  description: string;
+  thumbnails: {
+    standard: {
+      url: string;
+    };
+  };
+}
+
 export async function POST(req: NextRequest) {
     try {
         const user = await JSON.parse(req.headers.get("user") || "");
@@ -23,7 +33,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { youtube_url, space_id } = body;
+        const { youtube_url } = body;
 
         if (!youtube_url) {
             return NextResponse.json(
@@ -52,7 +62,7 @@ export async function POST(req: NextRequest) {
 
         // metadata: 
         const metadataResponse = await axios.get(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${video_id}&key=${process.env.YOUTUBE_APIKEY}`);
-        const metadata = metadataResponse.data as { items: { snippet: any }[] };
+        const metadata = metadataResponse.data as { items: { snippet: VideoMetadata }[] };
         if (!metadata.items || metadata.items.length === 0) {
             return NextResponse.json(
                 { message: "Could not fetch video metadata" },

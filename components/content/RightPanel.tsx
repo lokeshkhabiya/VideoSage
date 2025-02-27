@@ -1,6 +1,6 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ChatTab from "./ChatTab";
 import QuizTab from "./QuizTab";
 import FlashcardsTab from "./FlashcardsTab";
@@ -56,10 +56,6 @@ interface RightPanelProps {
 export default function RightPanel({
   activeMainTab,
   setActiveMainTab,
-  chatInput,
-  setChatInput,
-  handleChatSubmit,
-  dummyChatMessages,
 }: RightPanelProps) {
   return (
     <div className="h-full w-full p-4 flex flex-col min-h-0">

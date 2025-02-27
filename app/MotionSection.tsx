@@ -1,12 +1,11 @@
 "use client"
 
-import { motion } from 'framer-motion'
+import { motion, HTMLMotionProps } from 'framer-motion'
 import { ReactNode } from 'react'
 
-interface MotionSectionProps {
+interface MotionSectionProps extends HTMLMotionProps<"section"> {
   children: ReactNode
   className?: string
-  [key: string]: any
 }
 
 export default function MotionSection({ children, className, ...props }: MotionSectionProps) {
@@ -15,4 +14,4 @@ export default function MotionSection({ children, className, ...props }: MotionS
       {children}
     </motion.section>
   )
-} 
+}

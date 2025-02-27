@@ -43,7 +43,7 @@ export async function PUT(req: NextRequest) {
     const payload = await verifyJwtToken(token, process.env.JWT_SECRET!);
 
     // Ensure the user in the token matches the user being updated
-    if (payload.user_id !== userId) {
+    if (payload?.user_id !== userId) {
       return NextResponse.json(
         { message: "Unauthorized: Token does not match user" },
         { status: 403 }

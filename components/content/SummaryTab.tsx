@@ -4,7 +4,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSpaces } from "@/hooks/space-provider";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@/hooks/auth-provider";
@@ -49,7 +49,7 @@ export default function SummaryTab({
           });
 
           if (response?.data) {
-            //@ts-ignore
+            // @ts-expect-error response.data.data type is unknown
             setSummaryData(response?.data?.data);
           }
         } catch (error) {
@@ -62,7 +62,7 @@ export default function SummaryTab({
       fetchData();
     }
 
-  }, [spaces, id, youtube_id, content_id]);
+  }, [spaces, id, youtube_id, content_id, user?.token]);
 
   return (
     <TabsContent value={value} className="flex-1 min-h-0 overflow-hidden mt-4">

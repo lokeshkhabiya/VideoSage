@@ -5,24 +5,9 @@ import { Video, FileText } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/auth-provider";
 import { useSpaces } from "@/hooks/space-provider";
+import Image from "next/image";
 
 /** Shape of each content item in the space. */
-interface ContentItem {
-  id: string;
-  youtube_id: string;
-  type: string;
-  title?: string | null;
-  thumbnailUrl?: string | null;
-  createdAt?: string; // Updated to match space-provider.tsx
-}
-
-/** Shape of the space data. */
-interface SpaceItem {
-  id: string;
-  name: string;
-  createdAt?: string;
-  contents?: ContentItem[];
-}
 
 export default function SpacePage() {
   const { id } = useParams();
@@ -63,9 +48,11 @@ export default function SpacePage() {
                 {/* Render content type */}
                 {item.type === "YOUTUBE_CONTENT" ? (
                   <div className="aspect-video bg-muted relative">
-                    <img
+                    <Image
                       src={item.thumbnailUrl || "/placeholder.svg"}
                       alt={item.title || "No title"}
+                      width={640}
+                      height={360}
                       className="object-cover w-full h-full"
                     />
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />

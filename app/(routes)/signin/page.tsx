@@ -96,8 +96,8 @@ export default function SignIn() {
           className="flex-1 rounded-2xl bg-black dark:bg-white text-white dark:text-black p-8 flex flex-col justify-center h-full"
         >
           <blockquote className="text-2xl font-serif italic mb-4">
-            "Education is not the filling of a pail, but the lighting of a
-            fire."
+            &ldquo;Education is not the filling of a pail, but the lighting of a
+            fire.&rdquo;
           </blockquote>
           <p className="text-lg">- W.B. Yeats</p>
         </motion.div>

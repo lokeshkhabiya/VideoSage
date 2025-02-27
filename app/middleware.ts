@@ -31,7 +31,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   } catch (error) {
     return NextResponse.json(
-      { message: "Unauthorized: Invalid token" },
+      { message: "Unauthorized: Invalid token", error },
       { status: 401 }
     );
   }

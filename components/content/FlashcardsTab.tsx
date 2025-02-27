@@ -60,9 +60,9 @@ export default function FlashcardsTab({
             }
           });
           
-          // @ts-ignore
+          // @ts-expect-error Response type is not properly defined
           if (response?.data?.data?.flashcards) {
-            // @ts-ignore
+            // @ts-expect-error Response type is not properly defined
             setFlashcards(response.data.data.flashcards);
           }
         } catch (error) {
@@ -74,7 +74,7 @@ export default function FlashcardsTab({
 
       fetchData();
     }
-  }, [spaces, id, youtube_id, content_id]);
+  }, [spaces, id, youtube_id, content_id, user?.token]);
 
   const resetCard = () => {
     setShowHint(false);

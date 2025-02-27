@@ -27,7 +27,7 @@ export function Sidebar() {
     <div className="flex flex-col h-full w-full dark:bg-gray-900">
       <div className="p-4 border-b">
         <Link href="/" className="flex items-center space-x-2">
-          <VideoSageLogo className="h-6 w-6" />
+          <VideoSageLogo />
           <span className="font-bold">VideoSage</span>
         </Link>
       </div>
@@ -94,6 +94,6 @@ export function Sidebar() {
   );
 }
 
-function VideoSageLogo(props: React.SVGProps<SVGSVGElement>) {
+function VideoSageLogo() {
   return <Image alt="Logo" src={"/logo.png"} width="55" height="55" />;
 }

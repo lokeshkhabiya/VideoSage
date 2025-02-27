@@ -162,7 +162,7 @@ export function SettingsPage() {
         newPassword: "",
         confirmNewPassword: "",
       });
-    } catch (error) {
+    } catch {
       toast.error("Failed to update profile");
     } finally {
       setIsLoading(false);
@@ -170,7 +170,7 @@ export function SettingsPage() {
   }
 
   // -- Deactivate Account Submit Handler --
-  async function onDeactivate(data: DeactivateFormValues) {
+  async function onDeactivate() {
     setIsDeactivating(true);
     try {
       // Simulate account deactivation (replace with real API call)
@@ -178,7 +178,7 @@ export function SettingsPage() {
       toast.success("Account deactivated successfully");
       logout();
       router.replace("/");
-    } catch (error) {
+    } catch {
       toast.error("Failed to deactivate account");
     } finally {
       setIsDeactivating(false);
@@ -203,5 +203,3 @@ export function SettingsPage() {
     </div>
   );
 }
-
-

@@ -1,7 +1,6 @@
 import React from 'react'
 import markdownit from "markdown-it"
 import DOMPurify from 'dompurify';
-import { Button } from './ui/button';
 
 const md = markdownit({
   html: true

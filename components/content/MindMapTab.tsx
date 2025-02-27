@@ -33,7 +33,6 @@ export default function MindMapTab({
   activeMainTab,
 }: MindMapTabProps) {
   const [mindMapData, setMindMapData] = useState<MindMapData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [youtube_id, setYoutubeId] = useState<string>("");
   const [content_id, setContentId] = useState<string>("");
   const { id } = useParams();
@@ -43,7 +42,6 @@ export default function MindMapTab({
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    setIsLoading(true);
     // Find the content across all spaces
     for (const space of spaces) {
       const content = space.contents?.find(content => content.id === id);
@@ -67,13 +65,11 @@ export default function MindMapTab({
           );
           const data = await response?.data;
           if (data) {
-            // @ts-ignore
+            // @ts-expect-error data.data type is unknown
             setMindMapData(data.data);
           }
         } catch (error) {
           console.error("Error fetching mindmap:", error);
-        } finally {
-          setIsLoading(false);
         }
       }
 
@@ -96,7 +92,7 @@ export default function MindMapTab({
       })
     });
  
-    // @ts-ignore
+    // @ts-expect-error diagram.background type is unknown
     diagram.background = "white";
 
     // Define node templates for different categories
