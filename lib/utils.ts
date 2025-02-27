@@ -48,6 +48,11 @@ export async function fetchTranscripts(
             lang: "en",
         });
 
+        if (!transcript || transcript.length === 0) {
+            console.error("No transcript data returned for video:", video_id);
+            return null;
+        }
+
         const formattedTranscript: transcriptInterface[] = transcript.map(
             (item) => ({
                 text: item.text,
@@ -59,7 +64,8 @@ export async function fetchTranscripts(
 
         return formattedTranscript;
     } catch (transcriptError: unknown) {
-        console.error("Error fetching transcript:", transcriptError);
+        console.error("Error fetching transcript for video:", video_id);
+        console.error("Error details:", transcriptError instanceof Error ? transcriptError.message : transcriptError);
         return null;
     }
 }
