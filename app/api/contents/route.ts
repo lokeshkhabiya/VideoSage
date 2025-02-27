@@ -228,14 +228,19 @@ export async function POST(req: NextRequest) {
       });
       console.log("Created new content & youtubeContent with ID:", contentId);
 
-      // 7B) Vector Embeddings (Pinecone)
-      //     (Only do this once for brand-new videos)
-      const pineconeIndex = await initializePinecone();
-      const embeddedChunks = await generateEmbeddings(
-        processedTranscriptChunks,
-        videoId
-      );
-      await upsertChunksToPinecone(pineconeIndex, embeddedChunks);
+      try {
+        // 7B) Vector Embeddings (Pinecone)
+        //     (Only do this once for brand-new videos)
+        const pineconeIndex = await initializePinecone();
+        const embeddedChunks = await generateEmbeddings(
+          processedTranscriptChunks,
+          videoId
+        );
+        await upsertChunksToPinecone(pineconeIndex, embeddedChunks);
+      } catch (error) {
+        console.error("Error during embedding generation:", error);
+        // Continue execution even if embeddings fail
+      }
     }
 
     // ----------------------------------------------------------------------
