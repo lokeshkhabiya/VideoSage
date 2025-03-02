@@ -7,7 +7,7 @@ import { v4 as uuid } from "uuid";
 // These imports match your original route's transcript & embedding logic
 import {
   fetchTranscript2,
-  fetchTranscripts,
+  // fetchTranscripts,
   generateEmbeddings,
   initializePinecone,
   preprocessTranscript,

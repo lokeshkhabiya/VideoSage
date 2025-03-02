@@ -60,7 +60,7 @@ export async function fetchTranscript2(video_id: string): Promise<transcriptInte
             if (englishTrack) {
                 // Get transcript data
                 const transcriptResponse = await axios.get(englishTrack.base_url);
-                const transcriptText: any = transcriptResponse.data;
+                const transcriptText = transcriptResponse.data as string;
                 
                 // Parse XML transcript
                 const matches = transcriptText.match(/<text[^>]*>(.*?)<\/text>/g);
