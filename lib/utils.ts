@@ -4,6 +4,8 @@ import { YoutubeTranscript } from "youtube-transcript";
 import { Pinecone, Index } from "@pinecone-database/pinecone";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { HfInference } from "@huggingface/inference";
+import { Innertube } from 'youtubei.js';
+import axios from "axios";
 
 const hf = new HfInference(process.env.HF_TOKEN!)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
@@ -38,6 +40,62 @@ interface PineconeVector {
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
+}
+
+export async function fetchTranscript2(video_id: string): Promise<transcriptInterface[] | null> {
+    try {
+        // Initialize the Innertube client
+        const innertube = await Innertube.create();
+        
+        // Get video details including captions
+        const video = await innertube.getBasicInfo(video_id);
+        
+        if (video.captions) {
+            // Get caption tracks
+            const captionTracks = video.captions.caption_tracks;
+            
+            // Find English track
+            const englishTrack = captionTracks?.find(track => track.language_code === 'en');
+            
+            if (englishTrack) {
+                // Get transcript data
+                const transcriptResponse = await axios.get(englishTrack.base_url);
+                const transcriptText: any = transcriptResponse.data;
+                
+                // Parse XML transcript
+                const matches = transcriptText.match(/<text[^>]*>(.*?)<\/text>/g);
+                if (matches) {
+                    const transcriptData = matches.map((match: string) => {
+                        const durationMatch = match.match(/dur="([^"]*)"/) || ['', '0'];
+                        const offsetMatch = match.match(/start="([^"]*)"/) || ['', '0'];
+                        const textMatch = match.match(/>([^<]*)</);
+                        
+                        return {
+                            text: textMatch ? textMatch[1].replace(/&amp;/g, '&')
+                                                      .replace(/&quot;/g, '"')
+                                                      .replace(/&#39;/g, "'")
+                                                      .replace(/&lt;/g, '<')
+                                                      .replace(/&gt;/g, '>') : '',
+                            duration: parseFloat(durationMatch[1]),
+                            offset: parseFloat(offsetMatch[1]),
+                            lang: englishTrack.language_code
+                        };
+                    });
+                    
+                    return transcriptData;
+                }
+            }
+            console.log('No English captions available.');
+            return null;
+        }
+        console.log('No captions available for this video.');
+        return null;
+        
+    } catch (transcriptError: unknown) {
+        console.error("Error fetching transcript for video:", video_id);
+        console.error("Error details:", transcriptError instanceof Error ? transcriptError.message : transcriptError);
+        return null;
+    }
 }
 
 export async function fetchTranscripts(
@@ -120,23 +178,27 @@ export const generateEmbeddings = async (
     chunks: { text: string; startTime: number | null; endTime: number | null }[],
     video_id: string
 ) => {
-    return Promise.all(
-        chunks.map(async (chunk, i) => {
+    const results = [];
+    for (const [i, chunk] of chunks.entries()) {
+        try {
             const embedding = await hf.featureExtraction({
                 model: 'mixedbread-ai/mxbai-embed-large-v1',
                 inputs: chunk.text
             });
-            
-            return {
+
+            results.push({
                 id: `${video_id}-chunk-${i}`,
                 video_id: video_id,
                 text: chunk.text,
                 startTime: chunk.startTime,
                 endTime: chunk.endTime,
                 vector: Array.from(embedding),
-            } as ChunkData;
-        })
-    );
+            } as ChunkData);
+        } catch (error) {
+            console.error(`Error generating embedding for chunk ${i}:`, error);
+        }
+    }
+    return results;
 };
 
 export const upsertChunksToPinecone = async (index: Index, chunks: ChunkData[]) => {
@@ -155,8 +217,12 @@ export const upsertChunksToPinecone = async (index: Index, chunks: ChunkData[]) 
     // Upsert in batches of 100 to avoid rate limits
     const batchSize = 100;
     for (let i = 0; i < vectors.length; i += batchSize) {
-        const batch = vectors.slice(i, i + batchSize);
-        await index.namespace("videosage-namespace-2").upsert(batch);
+        try {
+            const batch = vectors.slice(i, i + batchSize);
+            await index.namespace("videosage-namespace-2").upsert(batch);
+        } catch (error) {
+            console.error(`Error upserting batch starting at index ${i}:`, error);
+        }
     }
 };
 

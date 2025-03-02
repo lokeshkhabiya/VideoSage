@@ -6,6 +6,7 @@ import { v4 as uuid } from "uuid";
 
 // These imports match your original route's transcript & embedding logic
 import {
+  fetchTranscript2,
   fetchTranscripts,
   generateEmbeddings,
   initializePinecone,
@@ -124,14 +125,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch transcripts from your existing utility
-    const transcript: transcriptInterface[] | null = await fetchTranscripts(
+    const transcript: transcriptInterface[] | null = await fetchTranscript2(
       videoId
     );
-    if (!transcript || transcript.length === 0) {
-      console.log("Error extracting transcripts or no transcripts found");
-      return NextResponse.json(
-        { error: "Error extracting transcripts or no transcripts found" },
-        { status: 400 }
+      if (!transcript || transcript.length === 0) {
+        console.log("Error extracting transcripts or no transcripts found");
+        return NextResponse.json(
+          { error: "Error extracting transcripts or no transcripts found" },
+          { status: 400 }
       );
     }
 
@@ -268,7 +269,7 @@ export async function POST(req: NextRequest) {
     //     status: "success",
     //     data: { space_id, content_id, type, title, thumbnail_url },
     //   }
-    //
+    
     // We'll respond with 200 either way (new or existing).
     return NextResponse.json(
       {
