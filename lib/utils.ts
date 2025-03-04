@@ -4,7 +4,6 @@ import { YoutubeTranscript } from "youtube-transcript";
 import { Pinecone, Index } from "@pinecone-database/pinecone";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { HfInference } from "@huggingface/inference";
-import { Innertube } from 'youtubei.js';
 import axios from "axios";
 
 const hf = new HfInference(process.env.HF_TOKEN!)
@@ -44,53 +43,9 @@ export function cn(...inputs: ClassValue[]) {
 
 export async function fetchTranscript2(video_id: string): Promise<transcriptInterface[] | null> {
     try {
-        // Initialize the Innertube client
-        const innertube = await Innertube.create();
-        
-        // Get video details including captions
-        const video = await innertube.getBasicInfo(video_id);
-        
-        if (video.captions) {
-            // Get caption tracks
-            const captionTracks = video.captions.caption_tracks;
-            
-            // Find English track
-            const englishTrack = captionTracks?.find(track => track.language_code === 'en');
-            
-            if (englishTrack) {
-                // Get transcript data
-                const transcriptResponse = await axios.get(englishTrack.base_url);
-                const transcriptText = transcriptResponse.data as string;
-                
-                // Parse XML transcript
-                const matches = transcriptText.match(/<text[^>]*>(.*?)<\/text>/g);
-                if (matches) {
-                    const transcriptData = matches.map((match: string) => {
-                        const durationMatch = match.match(/dur="([^"]*)"/) || ['', '0'];
-                        const offsetMatch = match.match(/start="([^"]*)"/) || ['', '0'];
-                        const textMatch = match.match(/>([^<]*)</);
-                        
-                        return {
-                            text: textMatch ? textMatch[1].replace(/&amp;/g, '&')
-                                                      .replace(/&quot;/g, '"')
-                                                      .replace(/&#39;/g, "'")
-                                                      .replace(/&lt;/g, '<')
-                                                      .replace(/&gt;/g, '>') : '',
-                            duration: parseFloat(durationMatch[1]),
-                            offset: parseFloat(offsetMatch[1]),
-                            lang: englishTrack.language_code
-                        };
-                    });
-                    
-                    return transcriptData;
-                }
-            }
-            console.log('No English captions available.');
-            return null;
-        }
-        console.log('No captions available for this video.');
-        return null;
-        
+        const response = await axios.post("https://lucky-limit-c396.lokeshkhabiya0011.workers.dev/api/transcript", {video_id: video_id});
+        const transcripts = response?.data as transcriptInterface[];
+        return transcripts;
     } catch (transcriptError: unknown) {
         console.error("Error fetching transcript for video:", video_id);
         console.error("Error details:", transcriptError instanceof Error ? transcriptError.message : transcriptError);
