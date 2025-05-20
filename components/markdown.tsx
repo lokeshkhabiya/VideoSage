@@ -32,7 +32,7 @@ const Markdown = ({ content, onTimestampClick }: Props) => {
 
   const html = md.render(content);
   const purifiedHtml = DOMPurify.sanitize(html);
-  const [clickedTimestamp, setClickedTimestamp] = useState<String>("0:00"); 
+  const [clickedTimestamp, setClickedTimestamp] = useState<string>("0:00"); 
 
   const handleClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
