@@ -11,22 +11,8 @@ import {
 
 import LeftPanel from "./LeftPanel";
 import RightPanel from "./RightPanel";
-
-/**
- * (Optional) If you moved dummy data to "dummyData.ts",
- * import it here. Otherwise, keep them in this file as you originally had.
- */
-import {
-  dummyChatMessages,
-  dummyFlashcards,
-  dummySummary,
-  dummyTakeaways,
-  dummyQuiz,
-  dummyMindMap,
-} from "./dummyData";
-
 interface ContentPageProps {
-  id: string; // from useParams
+  id: string;
 }
 
 export default function ContentPage({ id }: ContentPageProps) {
@@ -34,27 +20,6 @@ export default function ContentPage({ id }: ContentPageProps) {
 
   const [activeMainTab, setActiveMainTab] = useState("chat");
   const [activeVideoTab, setActiveVideoTab] = useState("transcript");
-  const [chatInput, setChatInput] = useState("");
-  const [currentFlashcard, setCurrentFlashcard] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [selectedAnswers, setSelectedAnswers] = useState<
-    Record<number, number>
-  >({});
-
-  const handleChatSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (chatInput.trim()) {
-      // TODO: handle sending the chat message
-      setChatInput("");
-    }
-  };
-
-  const handleAnswerSelect = (questionIndex: number, answerIndex: number) => {
-    setSelectedAnswers((prev) => ({
-      ...prev,
-      [questionIndex]: answerIndex,
-    }));
-  };
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -82,7 +47,6 @@ export default function ContentPage({ id }: ContentPageProps) {
 
             <ResizableHandle className="flex" />
 
-            {/* ---- RIGHT PANEL (Tabs) ---- */}
             <ResizablePanel
               defaultSize={60}
               minSize={40}
@@ -91,21 +55,6 @@ export default function ContentPage({ id }: ContentPageProps) {
               <RightPanel
                 activeMainTab={activeMainTab}
                 setActiveMainTab={setActiveMainTab}
-                chatInput={chatInput}
-                setChatInput={setChatInput}
-                handleChatSubmit={handleChatSubmit}
-                dummyChatMessages={dummyChatMessages}
-                dummyQuiz={dummyQuiz}
-                selectedAnswers={selectedAnswers}
-                handleAnswerSelect={handleAnswerSelect}
-                dummyFlashcards={dummyFlashcards}
-                currentFlashcard={currentFlashcard}
-                setCurrentFlashcard={setCurrentFlashcard}
-                isFlipped={isFlipped}
-                setIsFlipped={setIsFlipped}
-                dummySummary={dummySummary}
-                dummyTakeaways={dummyTakeaways}
-                dummyMindMap={dummyMindMap}
               />
             </ResizablePanel>
           </div>

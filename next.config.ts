@@ -10,6 +10,13 @@ const nextConfig: NextConfig = {
     domains: ['i.ytimg.com'],
   },
   
+  // Environment Variables
+  env: {
+    HF_TOKEN: process.env.HF_TOKEN,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    PINECONE_API_KEY: process.env.PINECONE_API_KEY,
+  },
+  
   // Update the experimental options
   serverExternalPackages: ['sharp', 'onnxruntime-node'],
   webpack: (config, { isServer }) => {

@@ -6,9 +6,21 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { HfInference } from "@huggingface/inference";
 import axios from "axios";
 
-const hf = new HfInference(process.env.HF_TOKEN!)
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+// Initialize clients in functions where they are needed
+const getHfClient = () => {
+    if (!process.env.HF_TOKEN) {
+        throw new Error("HF_TOKEN is not defined");
+    }
+    return new HfInference(process.env.HF_TOKEN);
+};
+
+const getGeminiClient = () => {
+    if (!process.env.GEMINI_API_KEY) {
+        throw new Error("GEMINI_API_KEY is not defined");
+    }
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    return genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+};
 
 export interface transcriptInterface {
     text: string;
@@ -133,6 +145,7 @@ export const generateEmbeddings = async (
     chunks: { text: string; startTime: number | null; endTime: number | null }[],
     video_id: string
 ) => {
+    const hf = getHfClient();
     const results = [];
     for (const [i, chunk] of chunks.entries()) {
         try {
@@ -227,7 +240,7 @@ export const summarizeChunks = async (transcripts: string) => {
 
     Please provide a clear, comprehensive summary following these guidelines.`;
 
-    const generateContent = await model.generateContent([prompt, transcripts]);
+    const generateContent = await getGeminiClient().generateContent([prompt, transcripts]);
     return generateContent?.response?.text();
 };
 
@@ -267,7 +280,7 @@ export const generateFlashCards = async (transcripts: string) => {
                   }
                   Always format your response in JSON for consistency.
   `;
-    const generateContent = await model.generateContent([prompt, transcripts]);
+    const generateContent = await getGeminiClient().generateContent([prompt, transcripts]);
     return generateContent.response.text();
 };
 
@@ -301,7 +314,7 @@ export const generateQuiz = async (transcripts: string) => {
                     }
                   ]
                 }`;
-    const generateContent = await model.generateContent([prompt, transcripts]);
+    const generateContent = await getGeminiClient().generateContent([prompt, transcripts]);
     return generateContent.response.text();
 };
 
@@ -311,7 +324,7 @@ export const generateMindMap = async (transcripts: string) => {
                   2. Each node should have a key (unique identifier), text (label), and optionally a category (to group types of nodes).
                   3. Each link should connect two nodes using their key values (from and to).
                   4. Organize the nodes hierarchically, starting with the root idea, followed by main topics and subtopics. Use numbers or unique IDs for the key field to maintain structure.`;
-  const generateContent = await model.generateContent([prompt, transcripts]);
+  const generateContent = await getGeminiClient().generateContent([prompt, transcripts]);
   return generateContent.response.text(); 
 };
 
@@ -322,10 +335,11 @@ export async function queryPineconeVectorStore(
     video_id: string,
     searchQuery: string
 ): Promise<string> {
+    const hf = getHfClient();
     const hfoutput = await hf.featureExtraction({
         model: 'mixedbread-ai/mxbai-embed-large-v1',
         inputs: searchQuery
-    })
+    });
     
     const queryEmbedding = Array.from(hfoutput);
 
