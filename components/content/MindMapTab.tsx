@@ -35,6 +35,8 @@ export default function MindMapTab({
   const [mindMapData, setMindMapData] = useState<MindMapData | null>(null);
   const [youtube_id, setYoutubeId] = useState<string>("");
   const [content_id, setContentId] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const { id } = useParams();
   const { spaces } = useSpaces();
   const { user } = useAuth();
@@ -55,6 +57,8 @@ export default function MindMapTab({
     if (youtube_id && content_id) {
       async function fetchMindMap() {
         try {
+          setLoading(true);
+          setError(null);
           const response = await axios.get(
             `/api/generate/mindmap?video_id=${youtube_id}&content_id=${content_id}`,
             {
@@ -70,6 +74,9 @@ export default function MindMapTab({
           }
         } catch (error) {
           console.error("Error fetching mindmap:", error);
+          setError("Failed to load mindmap. Please try again.");
+        } finally {
+          setLoading(false);
         }
       }
 
@@ -170,7 +177,22 @@ export default function MindMapTab({
       {activeMainTab === value && (
         <Card className="h-full flex flex-col p-6 min-h-0">
           <div className="relative flex-1 rounded-lg border bg-white dark:bg-white overflow-hidden">
-            {mindMapData && (
+            {loading && (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Generating mindmap...</p>
+                </div>
+              </div>
+            )}
+            {error && (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center text-red-600">
+                  <p>{error}</p>
+                </div>
+              </div>
+            )}
+            {mindMapData && !loading && !error && (
               <ReactDiagram
                 initDiagram={initDiagram}
                 divClassName="diagram-component h-full w-full"

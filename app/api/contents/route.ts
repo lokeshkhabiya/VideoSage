@@ -6,8 +6,7 @@ import { v4 as uuid } from "uuid";
 
 // These imports match your original route's transcript & embedding logic
 import {
-  // fetchTranscript2,
-  fetchTranscripts,
+  fetchTranscript2,
   // fetchTranscripts,
   generateEmbeddings,
   initializePinecone,
@@ -126,9 +125,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch transcripts from your existing utility
-    const transcript: transcriptInterface[] | null = await fetchTranscripts(
-      videoId
+    console.log("Fetching transcripts started");
+    const transcript: transcriptInterface[] | null = await fetchTranscript2(
+      youtube_url
     );
+    console.log("Transcript fetched");
       if (!transcript || transcript.length === 0) {
         console.log("Error extracting transcripts or no transcripts found");
         return NextResponse.json(
@@ -140,11 +141,13 @@ export async function POST(req: NextRequest) {
     // ----------------------------------------------------------------------
     // 5) Fetch YouTube metadata (title, description, thumbnail, etc.)
     // ----------------------------------------------------------------------
+    console.log("Fetching metadata started");
     const metadataResponse = await axios.get(
       `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${process.env.YOUTUBE_APIKEY}`
     );
     const metadata = metadataResponse.data as { items: { snippet: { title: string; description: string; thumbnails: { standard: { url: string } } } }[] };
     if (!metadata.items || metadata.items.length === 0) {
+      console.log("Could not fetch YouTube video metadata");
       return NextResponse.json(
         { error: "Could not fetch YouTube video metadata" },
         { status: 404 }
@@ -154,7 +157,7 @@ export async function POST(req: NextRequest) {
     const videoTitle = snippet.title || "Untitled";
     const videoDescription = snippet.description || "";
     const videoThumbnail = snippet?.thumbnails?.standard?.url || "";
-
+    console.log("Metadata fetched");
     // ----------------------------------------------------------------------
     // 6) Check if we already have a YoutubeContent for this videoId
     //    => If yes, reuse that content_id
@@ -171,7 +174,7 @@ export async function POST(req: NextRequest) {
 
     // Processed transcript chunks (for embedding)
     const processedTranscriptChunks = await preprocessTranscript(transcript);
-
+    console.log("Transcript processed");
     // ----------------------------------------------------------------------
     // 7) If existing, reuse the content_id. Otherwise, create new.
     // ----------------------------------------------------------------------

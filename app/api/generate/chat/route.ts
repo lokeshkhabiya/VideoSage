@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
             // Simplified search query
             const searchQuery = userQuestion;
             console.log("searchQuery", searchQuery);
-            retrievals = await queryPineconeVectorStore(pc, "youtube-content", "videosage-namespace-2", video_id, searchQuery);
+            retrievals = await queryPineconeVectorStore(pc, "youtube-content", "videosage-namespace-3", video_id, searchQuery);
             console.log(retrievals);
             console.log("Successfully retrieved context from vector store");
         } catch (retrievalError) {

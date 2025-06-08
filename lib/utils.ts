@@ -19,7 +19,9 @@ const getGeminiClient = () => {
         throw new Error("GEMINI_API_KEY is not defined");
     }
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    return genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    return genAI.getGenerativeModel({ 
+        model: "gemini-2.5-flash-preview-05-20",
+    });
 };
 
 export interface transcriptInterface {
@@ -53,13 +55,27 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-export async function fetchTranscript2(video_id: string): Promise<transcriptInterface[] | null> {
+export async function fetchTranscript2(videoUrl: string): Promise<transcriptInterface[] | null> {
     try {
-        const response = await axios.post("https://lucky-limit-c396.lokeshkhabiya0011.workers.dev/api/transcript", {video_id: video_id});
-        const transcripts = response?.data as transcriptInterface[];
-        return transcripts;
+        const langCode = "en";
+        
+        // Make request to tactiq API
+        const response: { data: {title: string, captions: { text: string, dur: string, start: string }[]} } = await axios.post('https://tactiq-apps-prod.tactiq.io/transcript', {
+            videoUrl,
+            langCode
+        });
+
+        // Transform the response
+        const transformedCaptions = response?.data?.captions?.map((caption: any) => ({
+            text: caption.text,
+            duration: parseFloat(caption.dur),
+            offset: parseFloat(caption.start),
+            lang: langCode
+        }));
+
+        return transformedCaptions;
     } catch (transcriptError: unknown) {
-        console.error("Error fetching transcript for video:", video_id);
+        console.error("Error fetching transcript for video:", videoUrl);
         console.error("Error details:", transcriptError instanceof Error ? transcriptError.message : transcriptError);
         return null;
     }
@@ -171,6 +187,7 @@ export const generateEmbeddings = async (
 
 export const upsertChunksToPinecone = async (index: Index, chunks: ChunkData[]) => {
     // Ensure vectors is an array and matches Pinecone's expected format
+    console.log("Upserting chunks to Pinecone");
     const vectors: PineconeVector[] = chunks.map((chunk) => ({
         id: chunk.id,
         values: Array.from(chunk.vector), // Convert to regular array if it's not already
@@ -181,17 +198,18 @@ export const upsertChunksToPinecone = async (index: Index, chunks: ChunkData[]) 
             endTime: chunk.endTime,
         },
     }));
-
+    console.log("Vectors created");
     // Upsert in batches of 100 to avoid rate limits
     const batchSize = 100;
     for (let i = 0; i < vectors.length; i += batchSize) {
         try {
             const batch = vectors.slice(i, i + batchSize);
-            await index.namespace("videosage-namespace-2").upsert(batch);
+            await index.namespace("videosage-namespace-3").upsert(batch);
         } catch (error) {
             console.error(`Error upserting batch starting at index ${i}:`, error);
         }
     }
+    console.log("Chunks upserted");
 };
 
 export const summarizeChunks = async (transcripts: string) => {
@@ -319,13 +337,76 @@ export const generateQuiz = async (transcripts: string) => {
 };
 
 export const generateMindMap = async (transcripts: string) => {
-  const prompt = `You are an AI designed to generate hierarchical mind maps from YouTube transcripts. Your output should be in a JSON format that is compatible with GoJS. Generate mindmap content such that it covers entire video mapped. 
-                  1. The JSON should have two main arrays: nodes and links.
-                  2. Each node should have a key (unique identifier), text (label), and optionally a category (to group types of nodes).
-                  3. Each link should connect two nodes using their key values (from and to).
-                  4. Organize the nodes hierarchically, starting with the root idea, followed by main topics and subtopics. Use numbers or unique IDs for the key field to maintain structure.`;
-  const generateContent = await getGeminiClient().generateContent([prompt, transcripts]);
-  return generateContent.response.text(); 
+  const prompt = `You are an AI designed to generate hierarchical mind maps from YouTube transcripts. Your output MUST be valid JSON format that is compatible with GoJS.
+
+CRITICAL REQUIREMENTS:
+1. Return ONLY valid JSON - no markdown, no explanations, no extra text
+2. Ensure all strings are properly escaped and quoted
+3. Do not include any line breaks within JSON string values
+4. Use proper JSON syntax throughout
+5. ENSURE THE JSON IS COMPLETE - do not cut off mid-way
+6. Keep node text concise (max 50 characters)
+7. Generate maximum 15-20 nodes to ensure complete response
+
+The JSON structure should contain:
+1. "nodes" array with objects having: key (number), text (string), category (string)
+2. "links" array with objects having: from (number), to (number)
+
+Categories should be: "root", "section", "topic", "subtopic"
+
+Example format:
+{
+  "nodes": [
+    {"key": 1, "text": "Main Topic", "category": "root"},
+    {"key": 2, "text": "Section 1", "category": "section"},
+    {"key": 3, "text": "Subtopic A", "category": "topic"}
+  ],
+  "links": [
+    {"from": 1, "to": 2},
+    {"from": 2, "to": 3}
+  ]
+}
+
+Generate a comprehensive but concise mindmap covering the key points from the video transcript. Keep it focused and complete.`;
+  
+  let attempts = 0;
+  const maxAttempts = 3;
+  
+  while (attempts < maxAttempts) {
+    try {
+      const generateContent = await getGeminiClient().generateContent([prompt, transcripts]);
+      const response = generateContent.response.text();
+      
+      // Basic validation that response contains JSON structure
+      if (response && response.includes('"nodes"') && response.includes('"links"')) {
+        return response;
+      }
+      
+      throw new Error("Response doesn't contain expected JSON structure");
+    } catch (error) {
+      attempts++;
+      console.error(`Attempt ${attempts} failed for mindmap generation:`, error);
+      
+      if (attempts >= maxAttempts) {
+        console.error("All attempts failed, returning fallback");
+        // Return a basic JSON structure as fallback
+        return JSON.stringify({
+          "nodes": [
+            {"key": 1, "text": "Video Content", "category": "root"},
+            {"key": 2, "text": "Main Topics", "category": "section"},
+            {"key": 3, "text": "Key Points", "category": "topic"}
+          ],
+          "links": [
+            {"from": 1, "to": 2},
+            {"from": 2, "to": 3}
+          ]
+        });
+      }
+      
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+    }
+  }
 };
 
 export async function queryPineconeVectorStore(
@@ -335,16 +416,18 @@ export async function queryPineconeVectorStore(
     video_id: string,
     searchQuery: string
 ): Promise<string> {
+    console.log("Querying Pinecone vector store");
     const hf = getHfClient();
     const hfoutput = await hf.featureExtraction({
         model: 'mixedbread-ai/mxbai-embed-large-v1',
         inputs: searchQuery
     });
-    
+    console.log("HF output generated");
     const queryEmbedding = Array.from(hfoutput);
-
+    console.log("Query embedding generated");
     const index = client.index(indexname);
-
+    console.log("Index fetched");
+    console.log("Querying Pinecone vector store");
     const queryResponse = await index.namespace(namespace).query({
         topK: 5,
         vector: queryEmbedding as number[],
@@ -354,14 +437,15 @@ export async function queryPineconeVectorStore(
             video_id: { "$eq": video_id },
         },
     });
-
+    console.log("Query response fetched");
     if (queryResponse.matches.length > 0) {
         const concatRetrievals = queryResponse.matches.map((match, idx) => {
             return `\n Transcript chunks findings ${idx + 1}: \n ${match.metadata?.text} \n chunk timestamp startTime: ${match.metadata?.startTime} & endTime: ${match.metadata?.endTime}`
         }).join(`\n\n`)
-
+        console.log("Concatenated retrievals"); 
         return concatRetrievals
     } else {
+        console.log("No match found");
         return "<no match>";
     }
 }
