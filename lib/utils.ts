@@ -66,7 +66,7 @@ export async function fetchTranscript2(videoUrl: string): Promise<transcriptInte
         });
 
         // Transform the response
-        const transformedCaptions = response?.data?.captions?.map((caption: any) => ({
+        const transformedCaptions = response?.data?.captions?.map((caption: { text: string, dur: string, start: string }) => ({
             text: caption.text,
             duration: parseFloat(caption.dur),
             offset: parseFloat(caption.start),
