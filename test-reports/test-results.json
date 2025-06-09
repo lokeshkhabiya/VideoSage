@@ -1,0 +1,985 @@
+{
+  "summary": {
+    "totalTests": 53,
+    "passedTests": 0,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "totalExecutionTime": 0,
+    "avgExecutionTime": 0,
+    "testSuites": 13
+  },
+  "testCases": [
+    {
+      "id": 1,
+      "route": "/api/users/signin",
+      "testCase": "should successfully sign in user with valid credentials",
+      "description": "Tests user authentication with correct email and password",
+      "expectedResult": "200 OK with user data and JWT token",
+      "performanceTarget": "< 1000ms",
+      "category": "Authentication",
+      "priority": "High",
+      "dependencies": [
+        "Database",
+        "JWT",
+        "bcrypt"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 2,
+      "route": "/api/users/signin",
+      "testCase": "should return 401 for non-existent user",
+      "description": "Tests authentication failure for invalid username",
+      "expectedResult": "401 Unauthorized with error message",
+      "performanceTarget": "< 500ms",
+      "category": "Authentication",
+      "priority": "High",
+      "dependencies": [
+        "Database"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 3,
+      "route": "/api/users/signin",
+      "testCase": "should return 401 for incorrect password",
+      "description": "Tests authentication failure for wrong password",
+      "expectedResult": "401 Unauthorized with error message",
+      "performanceTarget": "< 500ms",
+      "category": "Authentication",
+      "priority": "High",
+      "dependencies": [
+        "Database",
+        "bcrypt"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 4,
+      "route": "/api/users/signin",
+      "testCase": "should return 400 for invalid input format",
+      "description": "Tests input validation for malformed data",
+      "expectedResult": "400 Bad Request with validation errors",
+      "performanceTarget": "< 100ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Zod validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 5,
+      "route": "/api/users/signin",
+      "testCase": "should handle database errors gracefully",
+      "description": "Tests error handling for database connectivity issues",
+      "expectedResult": "500 Internal Server Error with generic message",
+      "performanceTarget": "< 1000ms",
+      "category": "Error Handling",
+      "priority": "Medium",
+      "dependencies": [
+        "Database"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 6,
+      "route": "/api/users/signin",
+      "testCase": "should meet performance requirements for high load",
+      "description": "Performance benchmark test for multiple concurrent requests",
+      "expectedResult": "Average < 100ms, Max < 500ms for 10 iterations",
+      "performanceTarget": "Avg < 100ms",
+      "category": "Performance",
+      "priority": "High",
+      "dependencies": [
+        "Database",
+        "JWT",
+        "bcrypt"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 7,
+      "route": "/api/users/signup",
+      "testCase": "should successfully create new user with valid data",
+      "description": "Tests user registration with valid signup data",
+      "expectedResult": "200 OK with new user data",
+      "performanceTarget": "< 2000ms",
+      "category": "Authentication",
+      "priority": "High",
+      "dependencies": [
+        "Database",
+        "bcrypt"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 8,
+      "route": "/api/users/signup",
+      "testCase": "should return 400 for invalid email format",
+      "description": "Tests email validation during registration",
+      "expectedResult": "400 Bad Request with validation error",
+      "performanceTarget": "< 100ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Zod validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 9,
+      "route": "/api/users/signup",
+      "testCase": "should return 400 for short password",
+      "description": "Tests password length validation",
+      "expectedResult": "400 Bad Request with validation error",
+      "performanceTarget": "< 100ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Zod validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 10,
+      "route": "/api/users/signup",
+      "testCase": "should return 400 for missing required fields",
+      "description": "Tests required field validation",
+      "expectedResult": "400 Bad Request with validation error",
+      "performanceTarget": "< 100ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Zod validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 11,
+      "route": "/api/users/signup",
+      "testCase": "should meet performance requirements for signup operations",
+      "description": "Performance benchmark for user registration",
+      "expectedResult": "Average < 200ms, Max < 1000ms for 5 iterations",
+      "performanceTarget": "Avg < 200ms",
+      "category": "Performance",
+      "priority": "Medium",
+      "dependencies": [
+        "Database",
+        "bcrypt"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 12,
+      "route": "/api/spaces GET",
+      "testCase": "should return 401 for missing authorization header",
+      "description": "Tests authentication requirement for fetching spaces",
+      "expectedResult": "401 Unauthorized",
+      "performanceTarget": "< 50ms",
+      "category": "Authorization",
+      "priority": "High",
+      "dependencies": [
+        "JWT middleware"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 13,
+      "route": "/api/spaces GET",
+      "testCase": "should return 401 for invalid token",
+      "description": "Tests JWT token validation",
+      "expectedResult": "401 Unauthorized",
+      "performanceTarget": "< 100ms",
+      "category": "Authorization",
+      "priority": "High",
+      "dependencies": [
+        "JWT verification"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 14,
+      "route": "/api/spaces GET",
+      "testCase": "should successfully fetch user spaces with valid token",
+      "description": "Tests retrieval of user-specific spaces",
+      "expectedResult": "200 OK with user spaces data",
+      "performanceTarget": "< 1000ms",
+      "category": "Data Retrieval",
+      "priority": "High",
+      "dependencies": [
+        "Database",
+        "JWT"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 15,
+      "route": "/api/spaces POST",
+      "testCase": "should return 401 for missing authorization header",
+      "description": "Tests authentication requirement for creating spaces",
+      "expectedResult": "401 Unauthorized",
+      "performanceTarget": "< 50ms",
+      "category": "Authorization",
+      "priority": "High",
+      "dependencies": [
+        "JWT middleware"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 16,
+      "route": "/api/spaces POST",
+      "testCase": "should return 400 for empty space name",
+      "description": "Tests space name validation",
+      "expectedResult": "400 Bad Request with validation error",
+      "performanceTarget": "< 100ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Input validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 17,
+      "route": "/api/spaces POST",
+      "testCase": "should successfully create space with valid data",
+      "description": "Tests space creation with valid data",
+      "expectedResult": "201 Created with new space data",
+      "performanceTarget": "< 1000ms",
+      "category": "Data Creation",
+      "priority": "High",
+      "dependencies": [
+        "Database",
+        "JWT"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 18,
+      "route": "/api/spaces",
+      "testCase": "should meet performance requirements for space operations",
+      "description": "Performance benchmark for space CRUD operations",
+      "expectedResult": "GET avg < 300ms, POST avg < 500ms",
+      "performanceTarget": "As specified",
+      "category": "Performance",
+      "priority": "Medium",
+      "dependencies": [
+        "Database",
+        "JWT"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 19,
+      "route": "/api/contents POST",
+      "testCase": "should return 401 for missing authorization header",
+      "description": "Tests authentication requirement for content processing",
+      "expectedResult": "401 Unauthorized",
+      "performanceTarget": "< 50ms",
+      "category": "Authorization",
+      "priority": "High",
+      "dependencies": [
+        "JWT middleware"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 20,
+      "route": "/api/contents POST",
+      "testCase": "should return 400 for missing youtube_url",
+      "description": "Tests required parameter validation",
+      "expectedResult": "400 Bad Request with error message",
+      "performanceTarget": "< 100ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Input validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 21,
+      "route": "/api/contents POST",
+      "testCase": "should return 400 for invalid YouTube URL",
+      "description": "Tests YouTube URL format validation",
+      "expectedResult": "400 Bad Request with error message",
+      "performanceTarget": "< 100ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "URL validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 22,
+      "route": "/api/contents POST",
+      "testCase": "should successfully process valid YouTube content",
+      "description": "Tests complete YouTube video processing workflow",
+      "expectedResult": "200 OK with processed content data",
+      "performanceTarget": "< 5000ms",
+      "category": "Content Processing",
+      "priority": "High",
+      "dependencies": [
+        "YouTube API",
+        "Database",
+        "Transcript processing",
+        "Embeddings"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 23,
+      "route": "/api/contents POST",
+      "testCase": "should handle existing content reuse efficiently",
+      "description": "Tests content deduplication and reuse",
+      "expectedResult": "200 OK with reused content data",
+      "performanceTarget": "< 1000ms",
+      "category": "Optimization",
+      "priority": "Medium",
+      "dependencies": [
+        "Database"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 24,
+      "route": "/api/contents GET",
+      "testCase": "should return user contents successfully",
+      "description": "Tests fetching user-specific content",
+      "expectedResult": "200 OK with user content list",
+      "performanceTarget": "< 1000ms",
+      "category": "Data Retrieval",
+      "priority": "High",
+      "dependencies": [
+        "Database",
+        "JWT"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 25,
+      "route": "/api/contents",
+      "testCase": "should meet performance requirements for content processing",
+      "description": "Performance benchmark for content operations",
+      "expectedResult": "Average < 2000ms, Max < 5000ms",
+      "performanceTarget": "As specified",
+      "category": "Performance",
+      "priority": "High",
+      "dependencies": [
+        "Multiple services"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 26,
+      "route": "/api/contents POST",
+      "testCase": "should handle transcript fetch failures gracefully",
+      "description": "Tests error handling for transcript extraction failures",
+      "expectedResult": "400 Bad Request with error message",
+      "performanceTarget": "< 1000ms",
+      "category": "Error Handling",
+      "priority": "Medium",
+      "dependencies": [
+        "YouTube transcript service"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 27,
+      "route": "/api/contents POST",
+      "testCase": "should handle YouTube API failures gracefully",
+      "description": "Tests error handling for YouTube API failures",
+      "expectedResult": "404 Not Found with error message",
+      "performanceTarget": "< 2000ms",
+      "category": "Error Handling",
+      "priority": "Medium",
+      "dependencies": [
+        "YouTube API"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 28,
+      "route": "/api/generate/summary GET",
+      "testCase": "should return 403 for missing video_id parameter",
+      "description": "Tests parameter validation for summary generation",
+      "expectedResult": "403 Forbidden with error message",
+      "performanceTarget": "< 50ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Parameter validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 29,
+      "route": "/api/generate/summary GET",
+      "testCase": "should return 403 for missing content_id parameter",
+      "description": "Tests parameter validation for summary generation",
+      "expectedResult": "403 Forbidden with error message",
+      "performanceTarget": "< 50ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Parameter validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 30,
+      "route": "/api/generate/summary GET",
+      "testCase": "should return 401 for unauthorized user",
+      "description": "Tests user authorization for content access",
+      "expectedResult": "401 Unauthorized with error message",
+      "performanceTarget": "< 100ms",
+      "category": "Authorization",
+      "priority": "High",
+      "dependencies": [
+        "Database",
+        "User-content relationship"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 31,
+      "route": "/api/generate/summary GET",
+      "testCase": "should return existing summary quickly when available",
+      "description": "Tests cached summary retrieval",
+      "expectedResult": "200 OK with existing summary",
+      "performanceTarget": "< 200ms",
+      "category": "Caching",
+      "priority": "High",
+      "dependencies": [
+        "Database"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 32,
+      "route": "/api/generate/summary GET",
+      "testCase": "should generate new summary when none exists",
+      "description": "Tests AI-powered summary generation",
+      "expectedResult": "200 OK with generated summary",
+      "performanceTarget": "< 3000ms",
+      "category": "AI Generation",
+      "priority": "High",
+      "dependencies": [
+        "Database",
+        "AI service",
+        "Transcript data"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 33,
+      "route": "/api/generate/summary GET",
+      "testCase": "should return 404 when no transcript is found",
+      "description": "Tests error handling for missing transcript data",
+      "expectedResult": "404 Not Found with error message",
+      "performanceTarget": "< 500ms",
+      "category": "Error Handling",
+      "priority": "Medium",
+      "dependencies": [
+        "Database"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 34,
+      "route": "/api/generate/summary GET",
+      "testCase": "should handle AI generation failures gracefully",
+      "description": "Tests error handling for AI service failures",
+      "expectedResult": "500 Internal Server Error with error message",
+      "performanceTarget": "< 2000ms",
+      "category": "Error Handling",
+      "priority": "Medium",
+      "dependencies": [
+        "AI service"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 35,
+      "route": "/api/generate/summary",
+      "testCase": "should meet performance requirements for summary operations",
+      "description": "Performance benchmark for summary generation",
+      "expectedResult": "Existing < 100ms, New < 3000ms",
+      "performanceTarget": "As specified",
+      "category": "Performance",
+      "priority": "High",
+      "dependencies": [
+        "Database",
+        "AI service"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 36,
+      "route": "/api/generate/summary GET",
+      "testCase": "should handle database errors gracefully",
+      "description": "Tests error handling for database connectivity issues",
+      "expectedResult": "500 Internal Server Error with error message",
+      "performanceTarget": "< 1000ms",
+      "category": "Error Handling",
+      "priority": "Medium",
+      "dependencies": [
+        "Database"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 37,
+      "route": "Validation/signupValidation",
+      "testCase": "should validate correct signup data",
+      "description": "Tests validation of valid signup form data",
+      "expectedResult": "Valid data object returned",
+      "performanceTarget": "< 10ms",
+      "category": "Validation",
+      "priority": "High",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 38,
+      "route": "Validation/signupValidation",
+      "testCase": "should reject invalid email format",
+      "description": "Tests email format validation",
+      "expectedResult": "Validation error thrown",
+      "performanceTarget": "< 10ms",
+      "category": "Validation",
+      "priority": "High",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 39,
+      "route": "Validation/signupValidation",
+      "testCase": "should reject short first name",
+      "description": "Tests minimum length validation for first name",
+      "expectedResult": "Validation error thrown",
+      "performanceTarget": "< 10ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 40,
+      "route": "Validation/signupValidation",
+      "testCase": "should reject long first name",
+      "description": "Tests maximum length validation for first name",
+      "expectedResult": "Validation error thrown",
+      "performanceTarget": "< 10ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 41,
+      "route": "Validation/signupValidation",
+      "testCase": "should reject short password",
+      "description": "Tests minimum password length validation",
+      "expectedResult": "Validation error thrown",
+      "performanceTarget": "< 10ms",
+      "category": "Validation",
+      "priority": "High",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 42,
+      "route": "Validation/signupValidation",
+      "testCase": "should reject long password",
+      "description": "Tests maximum password length validation",
+      "expectedResult": "Validation error thrown",
+      "performanceTarget": "< 10ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 43,
+      "route": "Validation/signupValidation",
+      "testCase": "should reject missing fields",
+      "description": "Tests required field validation",
+      "expectedResult": "Validation error thrown",
+      "performanceTarget": "< 10ms",
+      "category": "Validation",
+      "priority": "High",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 44,
+      "route": "Validation/signinValidation",
+      "testCase": "should validate correct signin data",
+      "description": "Tests validation of valid signin form data",
+      "expectedResult": "Valid data object returned",
+      "performanceTarget": "< 10ms",
+      "category": "Validation",
+      "priority": "High",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 45,
+      "route": "Validation/signinValidation",
+      "testCase": "should validate signin with just username (not email)",
+      "description": "Tests username format validation",
+      "expectedResult": "Valid data object returned",
+      "performanceTarget": "< 10ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 46,
+      "route": "Validation/signinValidation",
+      "testCase": "should reject short username",
+      "description": "Tests minimum username length validation",
+      "expectedResult": "Validation error thrown",
+      "performanceTarget": "< 10ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 47,
+      "route": "Validation/signinValidation",
+      "testCase": "should reject long username",
+      "description": "Tests maximum username length validation",
+      "expectedResult": "Validation error thrown",
+      "performanceTarget": "< 10ms",
+      "category": "Validation",
+      "priority": "Medium",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 48,
+      "route": "Validation/signinValidation",
+      "testCase": "should reject short password",
+      "description": "Tests minimum password length validation",
+      "expectedResult": "Validation error thrown",
+      "performanceTarget": "< 10ms",
+      "category": "Validation",
+      "priority": "High",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 49,
+      "route": "Validation/signinValidation",
+      "testCase": "should reject missing fields",
+      "description": "Tests required field validation",
+      "expectedResult": "Validation error thrown",
+      "performanceTarget": "< 10ms",
+      "category": "Validation",
+      "priority": "High",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 50,
+      "route": "Validation",
+      "testCase": "should meet performance requirements for validation operations",
+      "description": "Performance benchmark for validation functions",
+      "expectedResult": "Average < 1ms for both signup and signin",
+      "performanceTarget": "Avg < 1ms",
+      "category": "Performance",
+      "priority": "Medium",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 51,
+      "route": "Validation",
+      "testCase": "should handle validation errors efficiently",
+      "description": "Performance test for error handling in validation",
+      "expectedResult": "Error handling < 2ms average",
+      "performanceTarget": "Avg < 2ms",
+      "category": "Performance",
+      "priority": "Low",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 52,
+      "route": "Validation/signupValidation",
+      "testCase": "should handle exact boundary values for signup",
+      "description": "Tests edge cases with minimum and maximum valid values",
+      "expectedResult": "Both minimum and maximum valid values accepted",
+      "performanceTarget": "< 20ms",
+      "category": "Edge Cases",
+      "priority": "Medium",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    },
+    {
+      "id": 53,
+      "route": "Validation/signinValidation",
+      "testCase": "should handle exact boundary values for signin",
+      "description": "Tests edge cases with minimum and maximum valid values",
+      "expectedResult": "Both minimum and maximum valid values accepted",
+      "performanceTarget": "< 20ms",
+      "category": "Edge Cases",
+      "priority": "Medium",
+      "dependencies": [
+        "Zod schema validation"
+      ],
+      "status": "Not Run",
+      "actualExecutionTime": "N/A",
+      "actualResult": "Pending",
+      "issues": [],
+      "lastRun": "Never"
+    }
+  ]
+}
