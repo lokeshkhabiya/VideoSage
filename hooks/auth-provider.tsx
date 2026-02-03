@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { createContext, useContext, ReactNode, useEffect } from "react";
-import { useSpacesStore } from "@/hooks/space-provider";
+import { useSpacesStore, type SpacesStore } from "@/hooks/space-provider";
 
 // User and Space Interfaces
 interface Space {
@@ -47,7 +47,7 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
       user: userData,
       isAuthenticated: true,
     });
-    useSpacesStore.getState().resetSpaces();
+    (useSpacesStore.getState() as SpacesStore).resetSpaces();
   },
 
   setUser: (userData: User | null) =>
@@ -69,7 +69,7 @@ export const useAuthStore = create<AuthState & AuthActions>((set) => ({
       user: null,
       isAuthenticated: false,
     });
-    useSpacesStore.getState().resetSpaces();
+    (useSpacesStore.getState() as SpacesStore).resetSpaces();
   },
 
   // Update spaces for the user

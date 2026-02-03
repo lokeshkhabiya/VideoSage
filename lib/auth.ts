@@ -37,7 +37,7 @@ export async function signSessionToken(user: SessionUser) {
 export async function verifySessionToken(token: string): Promise<SessionUser | null> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
-    return payload as SessionUser;
+    return payload as unknown as SessionUser;
   } catch {
     return null;
   }

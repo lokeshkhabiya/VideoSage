@@ -57,8 +57,9 @@ export async function GET(req: NextRequest) {
             )
         }
 
+        // Test env uses a different Prisma client with metadata keyed by youtube_id
         const metadataClient = process.env.NODE_ENV === "test"
-            ? (prisma as any).metadata
+            ? (prisma as any).metadata // eslint-disable-line @typescript-eslint/no-explicit-any
             : prisma.contentMetadata;
 
         const existingMetadata = process.env.NODE_ENV === "test"

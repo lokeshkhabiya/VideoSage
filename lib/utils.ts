@@ -5,13 +5,12 @@ import {
 	YoutubeTranscriptNotAvailableLanguageError,
 } from "youtube-transcript";
 import { Pinecone, Index } from "@pinecone-database/pinecone";
-import { embed, embedMany, generateText } from "ai";
+import { generateText } from "ai";
 import axios from "axios";
 import {
 	createEmbedding,
 	createEmbeddings,
 	getChatModel,
-	getEmbeddingModel,
 	getFallbackChatModel,
 } from "@/lib/ai";
 

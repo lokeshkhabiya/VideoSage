@@ -1,17 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // (Optional) Export as a standalone site
-  // See https://nextjs.org/docs/pages/api-reference/next-config-js/output#automatically-copying-traced-files
-  output: 'standalone', // Feel free to modify/remove this option
-  
+  // Do not use output: 'standalone' on Vercel; Vercel uses its own deployment output.
+
   // Configure allowed image domains
   images: {
     domains: ['i.ytimg.com'],
   },
 
-  // Update the experimental options
-  serverExternalPackages: ['sharp', 'onnxruntime-node'],
+  // Externalize native packages that may not bundle well on Vercel
+  serverExternalPackages: ['sharp'],
   webpack: (config, { isServer }) => {
     // Add rule for .node files
     config.module.rules.push({

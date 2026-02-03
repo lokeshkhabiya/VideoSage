@@ -50,9 +50,11 @@ export default function SignIn() {
       if (
         response?.data &&
         typeof response.data === "object" &&
+        "user" in response.data &&
         response.status === 200
       ) {
-        const apiUser = response.data.user;
+        type LoginResponse = { user?: { user_id: string; email: string; first_name?: string; last_name?: string; username?: string | null; [key: string]: unknown } };
+        const apiUser = (response.data as LoginResponse).user;
         if (apiUser) {
           login({
             ...apiUser,

@@ -63,6 +63,4 @@ export const getFallbackChatModel = () =>
 	getOpenAIClient()(getFallbackChatModelId());
 
 export const getEmbeddingModel = () =>
-	getOpenAIClient().embedding(getEmbeddingModelId(), {
-		dimensions: parseInt(process.env.EMBEDDING_DIMENSIONS || "1024"),
-	});
+	getOpenAIClient().embedding(getEmbeddingModelId());

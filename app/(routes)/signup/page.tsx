@@ -57,20 +57,19 @@ export default function SignUp() {
       });
 
       const me = await axios.get("/api/auth/me");
-      if (me?.data?.user) {
+      type MeResponse = { user?: { user_id: string; email: string; first_name?: string; last_name?: string; username?: string | null; [key: string]: unknown } };
+      const meData = me?.data as MeResponse | undefined;
+      if (meData?.user) {
         login({
-          ...me.data.user,
-          name: `${me.data.user.first_name ?? ""} ${me.data.user.last_name ?? ""}`.trim(),
+          ...meData.user,
+          name: `${meData.user.first_name ?? ""} ${meData.user.last_name ?? ""}`.trim(),
         });
       }
 
       router.replace("/dashboard");
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Signup failed:", err);
-      const message =
-        axios.isAxiosError(err) && err.response?.data?.message
-          ? String(err.response.data.message)
-          : "Signup failed. Please try again.";
+      const message = "Signup failed. Please try again.";
       setError(message);
     }
   };

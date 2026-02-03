@@ -37,8 +37,10 @@ interface SpacesActions {
   resetSpaces: () => void;
 }
 
+export type SpacesStore = SpacesState & SpacesActions;
+
 // Create our Zustand store
-export const useSpacesStore = create(
+export const useSpacesStore = create<SpacesStore>(
   (set, get) => ({
     spaces: [],
     loading: true,
