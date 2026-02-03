@@ -4,11 +4,9 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RotateCcw, ChevronRight } from "lucide-react";
-import { useSpaces } from "@/hooks/space-provider";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "@/hooks/auth-provider";
 
 interface Flashcard {
   question: string;
@@ -28,37 +26,19 @@ export default function FlashcardsTab({
   activeMainTab,
 }: FlashcardsTabProps) {
   const { id } = useParams();
-  const { spaces } = useSpaces();
   const [isLoading, setIsLoading] = useState(false);
-  const [youtube_id, setYoutubeId] = useState<string>("");
-  const [content_id, setContentId] = useState<string>("");
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [currentFlashcard, setCurrentFlashcard] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
-  const { user } = useAuth();
 
   useEffect(() => {
-    setIsLoading(true);
-    // Find the content across all spaces
-    for (const space of spaces) {
-      const content = space.contents?.find(content => content.id === id);
-      if (content) {
-        setYoutubeId(content.youtube_id);
-        setContentId(content.id);
-        break;
-      }
-    }
-
-    if (youtube_id && content_id) {
+    if (id) {
+      setIsLoading(true);
       async function fetchData() {
         try {
-          const response = await axios.get(`/api/generate/flashcard?video_id=${youtube_id}&content_id=${content_id}`, {
-            headers: {
-              authorization: user?.token
-            }
-          });
+          const response = await axios.get(`/api/generate/flashcard?content_id=${id}`);
           
           // @ts-expect-error Response type is not properly defined
           if (response?.data?.data?.flashcards) {
@@ -74,7 +54,7 @@ export default function FlashcardsTab({
 
       fetchData();
     }
-  }, [spaces, id, youtube_id, content_id, user?.token]);
+  }, [id]);
 
   const resetCard = () => {
     setShowHint(false);

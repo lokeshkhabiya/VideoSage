@@ -1,20 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { generateFlashCards } from "@/lib/utils";
-import { v4 as uuid } from "uuid";
+import { getAuthUser } from "@/lib/auth";
 
 
 export async function GET(req: NextRequest) {
     try {
         const params = req.nextUrl.searchParams;
-        const video_id = params.get("video_id");
         const content_id = params.get("content_id");
-        const user = await JSON.parse(req.headers.get("user") || "");
+        const user = await getAuthUser(req);
 
-        if (!video_id || !content_id) {
+        if (!user) {
             return NextResponse.json(
-                { message: "Please provide video_id and content_id!"},
-                { status: 403 }
+                { message: "Unauthorized"},
+                { status: 401 }
+            )
+        }
+
+        if (!content_id) {
+            return NextResponse.json(
+                { message: "Please provide content_id!"},
+                { status: 400 }
             )
         }
 
@@ -34,17 +40,16 @@ export async function GET(req: NextRequest) {
             )
         }
 
-        const existingMetadata = await prisma.metadata.findUnique({
+        const existingMetadata = await prisma.contentMetadata.findUnique({
             where: {
-                youtube_id: video_id
+                content_id
             }
         })
 
         if (!existingMetadata) {
-            await prisma.metadata.create({
+            await prisma.contentMetadata.create({
                 data: {
-                    metadata_id: uuid(),
-                    youtube_id: video_id,
+                    content_id,
                     created_at: new Date(),
                     updated_at: new Date()
                 }
@@ -55,8 +60,7 @@ export async function GET(req: NextRequest) {
             const youtubeData = await prisma.youtubeContent.findUnique(
                 {
                     where: {
-                        content_id: content_id,
-                        youtube_id: video_id
+                        content_id: content_id
                     }
                 }
             )
@@ -68,7 +72,7 @@ export async function GET(req: NextRequest) {
                 );
             }
 
-            const transcripts = (youtubeData.transcript as { text: string, startTime: string, endTime: string }[]).map(chunk => chunk.text);
+            const transcripts = (youtubeData.transcript as { text: string, startTime: number, endTime: number }[]).map(chunk => chunk.text);
             const fullTranscript = transcripts.join(" ");
 
             const flashcards = await generateFlashCards(fullTranscript);
@@ -79,21 +83,54 @@ export async function GET(req: NextRequest) {
                     { status: 500 }
                 )
             }
-            const cleanedFlashcards = flashcards.replace(/```json\n|```/g, '');
-            // Ensure the flashcards string is valid JSON
+            
+            // Clean and validate the JSON response
+            let cleanedFlashcards = flashcards.trim();
+            
+            // Remove markdown code blocks if present
+            cleanedFlashcards = cleanedFlashcards.replace(/```json\n?/g, '');
+            cleanedFlashcards = cleanedFlashcards.replace(/```\n?/g, '');
+            
+            // Remove any leading/trailing whitespace
+            cleanedFlashcards = cleanedFlashcards.trim();
+            
+            // Try to find JSON content between first { and last }
+            const firstBrace = cleanedFlashcards.indexOf('{');
+            const lastBrace = cleanedFlashcards.lastIndexOf('}');
+            
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                cleanedFlashcards = cleanedFlashcards.substring(firstBrace, lastBrace + 1);
+            }
+
             let flashcardsJson;
             try {
                 flashcardsJson = JSON.parse(cleanedFlashcards);
+                
+                // Validate the structure
+                if (!flashcardsJson.flashcards || !Array.isArray(flashcardsJson.flashcards)) {
+                    throw new Error("Missing or invalid 'flashcards' array");
+                }
+                
+                // Validate each flashcard
+                for (const flashcard of flashcardsJson.flashcards) {
+                    if (!flashcard.question || !flashcard.hint || 
+                        !flashcard.answer || !flashcard.explanation || 
+                        !flashcard.source) {
+                        throw new Error("Invalid flashcard structure");
+                    }
+                }
+                
             } catch (parseError) {
                 console.error("Error parsing flashcards JSON: ", parseError);
+                console.error("Cleaned flashcards content:", cleanedFlashcards.substring(0, 1000)); // Log first 1000 chars
                 return NextResponse.json(
                     { message: "Invalid flashcards format!"},
                     { status: 500 }
                 );
             }
 
-            await prisma.metadata.update({
-                where: { youtube_id: video_id },
+            await prisma.contentMetadata.update({
+                where: { content_id },
                 data: { flashcards: flashcardsJson }
             });
 

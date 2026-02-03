@@ -1,11 +1,12 @@
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Manrope, Space_Grotesk } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/hooks/auth-provider";
 import { Header } from "@/components/header";
 import { SpacesProvider } from "@/hooks/space-provider";
 
-const inter = Inter({ subsets: ["latin"] });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-display" });
 
 export const metadata = {
   title: "VideoSage - AI-Powered Video Learning",
@@ -20,7 +21,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
+      <body
+        className={`${manrope.variable} ${spaceGrotesk.variable} font-sans`}
+        suppressHydrationWarning
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

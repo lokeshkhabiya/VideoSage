@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Card } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Button } from "./ui/button";
@@ -7,32 +7,14 @@ import { Loader2, Send } from "lucide-react";
 import { Input } from "./ui/input";
 import { useChat } from "ai/react";
 import MessageBox from "./messageBox";
-import { useAuthStore } from "@/hooks/auth-provider";
-import { useSpaces } from "@/hooks/space-provider";
 import { useParams } from "next/navigation";
 
 const Chat = () => {
   const { id } = useParams();
-  const { spaces } = useSpaces();
-  const [youtube_id, setYoutubeId] = useState<string>("");
-  const { user } = useAuthStore();
-
-  useEffect(() => {
-    for (const space of spaces) {
-      const content = space.contents?.find(content => content.id === id);
-      if (content) {
-        setYoutubeId(content.youtube_id);
-        break;
-      }
-    }
-  }, [spaces, id]);
 
   const { messages, input, handleInputChange, handleSubmit, isLoading } =
     useChat({
-      api: "../api/generate/chat",
-      headers: {
-        Authorization: `${user?.token}`,
-      },
+      api: "/api/generate/chat",
     });
 
   return (
@@ -71,7 +53,7 @@ const Chat = () => {
             event.preventDefault();
             handleSubmit(event, {
               data: {
-                video_id: youtube_id,
+                content_id: id,
               },
             });
           }}

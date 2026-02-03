@@ -3,11 +3,9 @@
 import { TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useSpaces } from "@/hooks/space-provider";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "@/hooks/auth-provider";
 import Markdown from "@/components/markdown";
 
 interface SummaryTabProps {
@@ -20,33 +18,15 @@ export default function SummaryTab({
   activeMainTab,
 }: SummaryTabProps) {
   const { id } = useParams();
-  const { spaces } = useSpaces();
   const [isLoading, setIsLoading] = useState(false);
-  const [youtube_id, setYoutubeId] = useState<string>("");
-  const [content_id, setContentId] = useState<string>("");
   const [summaryData, setSummaryData] = useState("");
-  const { user } = useAuth()
 
   useEffect(() => {
-    setIsLoading(true)
-    // Find the content across all spaces
-    for (const space of spaces) {
-      const content = space.contents?.find(content => content.id === id);
-      if (content) {
-        setYoutubeId(content.youtube_id);
-        setContentId(content.id);
-        break;
-      }
-    }
-
-    if (youtube_id && content_id) {
+    if (id) {
+      setIsLoading(true);
       async function fetchData() {
         try {
-          const response = await axios.get(`/api/generate/summary?video_id=${youtube_id}&content_id=${content_id}`, {
-            headers: {
-              authorization: user?.token
-            }
-          });
+          const response = await axios.get(`/api/generate/summary?content_id=${id}`);
 
           if (response?.data) {
             // @ts-expect-error response.data.data type is unknown
@@ -61,8 +41,7 @@ export default function SummaryTab({
 
       fetchData();
     }
-
-  }, [spaces, id, youtube_id, content_id, user?.token]);
+  }, [id]);
 
   return (
     <TabsContent value={value} className="flex-1 min-h-0 overflow-hidden mt-4">

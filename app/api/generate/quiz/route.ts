@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { v4 as uuid } from "uuid"
 import { generateQuiz } from "@/lib/utils";
+import { getAuthUser } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
     try {
         const params = req.nextUrl.searchParams;
-        const video_id = params.get("video_id");
         const content_id = params.get("content_id");
-        const user = await JSON.parse(req.headers.get("user") || "");
+        const user = await getAuthUser(req);
 
-        if (!video_id || !content_id) {
+        if (!user) {
             return NextResponse.json(
-                { message: "Please provide video_id and content_id!"},
-                { status: 403 }
+                { message: "Unauthorized"},
+                { status: 401 }
+            )
+        }
+
+        if (!content_id) {
+            return NextResponse.json(
+                { message: "Please provide content_id!"},
+                { status: 400 }
             )
         }
 
@@ -32,17 +38,16 @@ export async function GET(req: NextRequest) {
             )
         }
 
-        const existingMetadata = await prisma.metadata.findUnique({
+        const existingMetadata = await prisma.contentMetadata.findUnique({
             where: {
-                youtube_id: video_id
+                content_id
             }
         });
 
         if (!existingMetadata) {
-            await prisma.metadata.create({
+            await prisma.contentMetadata.create({
                 data: {
-                    metadata_id: uuid(),
-                    youtube_id: video_id,
+                    content_id,
                     created_at: new Date(),
                     updated_at: new Date()
                 }
@@ -52,8 +57,7 @@ export async function GET(req: NextRequest) {
         if (!existingMetadata?.quiz) {
             const youtubeData = await prisma.youtubeContent.findUnique({
                 where: {
-                    content_id: content_id,
-                    youtube_id: video_id
+                    content_id: content_id
                 }
             });
             
@@ -64,7 +68,7 @@ export async function GET(req: NextRequest) {
                 );
             }
 
-            const transcripts = (youtubeData.transcript as { text: string, startTime: string, endTime: string }[]).map(chunk => chunk.text);
+            const transcripts = (youtubeData.transcript as { text: string, startTime: number, endTime: number }[]).map(chunk => chunk.text);
             const fullTranscript = transcripts.join(" ");
 
             const quiz = await generateQuiz(fullTranscript);
@@ -75,26 +79,58 @@ export async function GET(req: NextRequest) {
                     { status: 500 }
                 );
             }
-            const cleanedQuiz = quiz.replace(/```json\n|```/g, '');
+            
+            // Clean and validate the JSON response
+            let cleanedQuiz = quiz.trim();
+            
+            // Remove markdown code blocks if present
+            cleanedQuiz = cleanedQuiz.replace(/```json\n?/g, '');
+            cleanedQuiz = cleanedQuiz.replace(/```\n?/g, '');
+            
+            // Remove any leading/trailing whitespace
+            cleanedQuiz = cleanedQuiz.trim();
+            
+            // Try to find JSON content between first { and last }
+            const firstBrace = cleanedQuiz.indexOf('{');
+            const lastBrace = cleanedQuiz.lastIndexOf('}');
+            
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                cleanedQuiz = cleanedQuiz.substring(firstBrace, lastBrace + 1);
+            }
 
             let quizJson;
             try {
                 quizJson = JSON.parse(cleanedQuiz);
+                
+                // Validate the structure
+                if (!quizJson.questions || !Array.isArray(quizJson.questions)) {
+                    throw new Error("Missing or invalid 'questions' array");
+                }
+                
+                // Validate each question
+                for (const question of quizJson.questions) {
+                    if (!question.question || !question.options || !Array.isArray(question.options) || 
+                        !question.correct_option || !question.explanation || !question.timestamp) {
+                        throw new Error("Invalid question structure");
+                    }
+                }
+                
             } catch (parseError) {
                 console.error("Error parsing quiz JSON: ", parseError);
+                console.error("Cleaned quiz content:", cleanedQuiz.substring(0, 1000)); // Log first 1000 chars
                 return NextResponse.json(
                     { message: "Invalid quiz format!"},
                     { status: 500 }
                 );
             }
 
-            await prisma.metadata.update({
-                where: { youtube_id: video_id },
+            await prisma.contentMetadata.update({
+                where: { content_id },
                 data: { quiz: quizJson }
             });
 
             return NextResponse.json({ 
-                message: `Successfully created quiz for content_id: ${content_id} and youtube_id: ${video_id}`,
+                message: `Successfully created quiz for content_id: ${content_id}`,
                 data: quizJson
             });
 

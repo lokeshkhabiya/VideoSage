@@ -3,7 +3,6 @@
 
 import { create } from "zustand";
 import { createContext, useContext, ReactNode } from "react";
-import { persist } from "zustand/middleware";
 
 // Type definitions
 export interface ContentItem {
@@ -33,68 +32,62 @@ interface SpacesActions {
   setSpaces: (spaces: SpaceItem[]) => void;
   addSpace: (space: SpaceItem) => void;
   setLoading: (val: boolean) => void;
-  createSpace: (token: string, name: string) => Promise<void>;
+  createSpace: (name: string) => Promise<void>;
   addContentToSpace: (spaceId: string, content: ContentItem) => void;
   resetSpaces: () => void;
 }
 
 // Create our Zustand store
 export const useSpacesStore = create(
-  persist<SpacesState & SpacesActions>(
-    (set, get) => ({
-      spaces: [],
-      loading: true,
+  (set, get) => ({
+    spaces: [],
+    loading: true,
 
-      setSpaces: (spaces) => set({ spaces }),
+    setSpaces: (spaces) => set({ spaces }),
 
-      addSpace: (space) =>
-        set((state) => ({ spaces: [...state.spaces, space] })),
+    addSpace: (space) =>
+      set((state) => ({ spaces: [...state.spaces, space] })),
 
-      setLoading: (val) => set({ loading: val }),
+    setLoading: (val) => set({ loading: val }),
 
-      // Create a new space via POST /api/spaces
-      async createSpace(token, name) {
-        const res = await fetch("/api/spaces", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ name }),
-        });
-        if (!res.ok) throw new Error("Failed to create space");
-        const created = await res.json();
-        get().addSpace({
-          id: created.id,
-          name: created.name,
-          createdAt: created.createdAt,
-          contents: [],
-        });
-      },
+    // Create a new space via POST /api/spaces
+    async createSpace(name) {
+      const res = await fetch("/api/spaces", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) throw new Error("Failed to create space");
+      const created = await res.json();
+      get().addSpace({
+        id: created.id,
+        name: created.name,
+        createdAt: created.createdAt,
+        contents: [],
+      });
+    },
 
-      // Add a new content item to the specified space in local store
-      addContentToSpace(spaceId, content) {
-        set((state) => ({
-          spaces: state.spaces.map((s) =>
-            s.id === spaceId
-              ? { ...s, contents: [...(s.contents || []), content] }
-              : s
-          ),
-        }));
-      },
+    // Add a new content item to the specified space in local store
+    addContentToSpace(spaceId, content) {
+      set((state) => ({
+        spaces: state.spaces.map((s) =>
+          s.id === spaceId
+            ? { ...s, contents: [...(s.contents || []), content] }
+            : s
+        ),
+      }));
+    },
 
-      // Reset store on logout
-      resetSpaces: () => {
-        set({
-          spaces: [],
-          loading: true,
-        });
-      },
-    }),
-    {
-      name: "spaces-storage", // key for localStorage
-    }
-  )
+    // Reset store on logout
+    resetSpaces: () => {
+      set({
+        spaces: [],
+        loading: true,
+      });
+    },
+  })
 );
 
 const SpacesContext = createContext<(SpacesState & SpacesActions) | null>(null);

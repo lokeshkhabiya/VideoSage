@@ -18,19 +18,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useAuthStore } from "@/hooks/auth-provider";
+import { useAuth } from "@/hooks/auth-provider";
 
 export default function SignUp() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     firstName: "",
     lastName: "",
     password: "",
   });
   const pathname = usePathname();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, login } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -47,14 +47,22 @@ export default function SignUp() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post("/api/users/signup", {
-        username: formData.username,
+      await axios.post("/api/auth/signup", {
+        email: formData.email,
         first_name: formData.firstName,
         last_name: formData.lastName,
         password: formData.password,
       });
 
-      router.push("/dashboard");
+      const me = await axios.get("/api/auth/me");
+      if (me?.data?.user) {
+        login({
+          ...me.data.user,
+          name: `${me.data.user.first_name ?? ""} ${me.data.user.last_name ?? ""}`.trim(),
+        });
+      }
+
+      router.replace("/dashboard");
     } catch (error) {
       console.error("Signup failed:", error);
     }
@@ -102,12 +110,12 @@ export default function SignUp() {
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <Input
-                      id="username"
-                      name="username"
-                      type="username"
+                      id="email"
+                      name="email"
+                      type="email"
                       placeholder="you@example.com"
                       required
-                      value={formData.username}
+                      value={formData.email}
                       onChange={handleChange}
                       className="pl-10"
                     />

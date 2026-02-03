@@ -14,19 +14,20 @@ import { Button } from "@/components/ui/button";
  * We do NOT do another fetch here to avoid duplication.
  */
 export default function DashboardPage() {
-  const { isAuthenticated, user } = useAuth();
-  const { spaces, loading, addSpace } = useSpaces();
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { spaces, loading, createSpace } = useSpaces();
   const router = useRouter();
 
   // If not authenticated, redirect.
   useEffect(() => {
+    if (authLoading) return;
     if (!isAuthenticated) {
       router.replace("/signin");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, authLoading, router]);
 
   // Show a loading state until we have spaces from the store.
-  if (!isAuthenticated || loading) {
+  if (authLoading || !isAuthenticated || loading) {
     return <div className="flex items-center justify-center h-full">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
   </div>;
@@ -34,25 +35,8 @@ export default function DashboardPage() {
 
   // Handler for creating a new space
   async function handleCreateSpace(name: string) {
-    if (!user?.token) return;
     try {
-      // Call POST /api/spaces
-      const res = await fetch("/api/spaces", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify({ name }),
-      });
-      if (!res.ok) throw new Error("Failed to create space");
-      const created = await res.json(); // { id, name, createdAt }
-      addSpace({
-        id: created.id,
-        name: created.name,
-        createdAt: created.createdAt,
-        contents: [], // new space has empty content
-      });
+      await createSpace(name);
     } catch (error) {
       console.error(error);
     }

@@ -12,10 +12,10 @@ import Image from "next/image";
 export default function SpacePage() {
   const { id } = useParams();
   const { spaces, loading } = useSpaces();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
   // Show loading state if not authenticated or still loading spaces
-  if (!isAuthenticated || loading) {
+  if (authLoading || !isAuthenticated || loading) {
     return <div className="flex items-center justify-center h-full">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
   </div>

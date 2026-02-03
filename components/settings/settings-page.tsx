@@ -98,14 +98,15 @@ export type DeactivateFormValues = z.infer<typeof deactivateFormSchema>;
 
 export function SettingsPage() {
   const router = useRouter();
-  const { user, updateUserData, logout } = useAuth();
+  const { user, updateUserData, logout, loading } = useAuth();
 
   // Ensure user is authenticated
   React.useEffect(() => {
+    if (loading) return;
     if (!user) {
       router.replace("/signin");
     }
-  }, [user, router]);
+  }, [user, router, loading]);
 
   // State for Profile form submission
   const [isLoading, setIsLoading] = React.useState(false);
@@ -126,6 +127,18 @@ export function SettingsPage() {
     },
   });
 
+  React.useEffect(() => {
+    if (!user) return;
+    form.reset({
+      email: user.email || "",
+      firstName: user.first_name || "",
+      lastName: user.last_name || "",
+      currentPassword: "",
+      newPassword: "",
+      confirmNewPassword: "",
+    });
+  }, [user, form]);
+
   // -- Deactivate Form Setup --
   const deactivateForm = useForm<DeactivateFormValues>({
     resolver: zodResolver(deactivateFormSchema),
@@ -138,19 +151,31 @@ export function SettingsPage() {
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true);
     try {
-      const wantsToChangePassword = Boolean(data.newPassword);
+      const response = await fetch("/api/users/update-profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
+        }),
+      });
 
-      if (wantsToChangePassword) {
-        // Validate and update password logic here
+      if (!response.ok) {
+        const errorPayload = await response.json();
+        throw new Error(errorPayload?.message ?? "Failed to update profile");
       }
 
-      // Simulate an API call (replace with real backend call)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      const payload = await response.json();
       updateUserData({
-        email: data.email,
-        first_name: data.firstName,
-        last_name: data.lastName,
+        email: payload.user.email,
+        first_name: payload.user.first_name,
+        last_name: payload.user.last_name,
+        username: payload.user.username,
       });
 
       toast.success("Profile updated successfully");
@@ -173,10 +198,23 @@ export function SettingsPage() {
   async function onDeactivate() {
     setIsDeactivating(true);
     try {
-      // Simulate account deactivation (replace with real API call)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch("/api/users/deactivate-account", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          password: deactivateForm.getValues("password"),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json();
+        throw new Error(errorPayload?.message ?? "Failed to deactivate account");
+      }
+
       toast.success("Account deactivated successfully");
-      logout();
+      await logout();
       router.replace("/");
     } catch {
       toast.error("Failed to deactivate account");

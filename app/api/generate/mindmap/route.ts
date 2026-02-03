@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { v4 as uuid } from "uuid";
 import { generateMindMap } from "@/lib/utils";
+import { getAuthUser } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
     try {
         const params = req.nextUrl.searchParams;
-        const video_id = params.get("video_id");
         const content_id = params.get("content_id");
-        const user = await JSON.parse(req.headers.get("user") || "");
+        const user = await getAuthUser(req);
 
-        if (!video_id || !content_id) {
+        if (!user) {
             return NextResponse.json(
-                { message: "Please provide video_id and content_id!"},
-                { status: 403 }
+                { message: "Unauthorized"},
+                { status: 401 }
+            )
+        }
+
+        if (!content_id) {
+            return NextResponse.json(
+                { message: "Please provide content_id!"},
+                { status: 400 }
             )
         }
 
@@ -33,17 +39,16 @@ export async function GET(req: NextRequest) {
             )
         }
 
-        const existingMetadata = await prisma.metadata.findUnique({
+        const existingMetadata = await prisma.contentMetadata.findUnique({
             where: {
-                youtube_id: video_id
+                content_id
             }
         })
 
         if (!existingMetadata) {
-            await prisma.metadata.create({
+            await prisma.contentMetadata.create({
                 data: {
-                    metadata_id: uuid(),
-                    youtube_id: video_id,
+                    content_id,
                     created_at: new Date(),
                     updated_at: new Date()
                 }
@@ -54,8 +59,7 @@ export async function GET(req: NextRequest) {
             const youtubeData = await prisma.youtubeContent.findUnique(
                 {
                     where: {
-                        content_id: content_id,
-                        youtube_id: video_id
+                        content_id: content_id
                     }
                 }
             )
@@ -67,7 +71,7 @@ export async function GET(req: NextRequest) {
                 );
             }
 
-            const transcripts = (youtubeData.transcript as { text: string, startTime: string, endTime: string }[]).map(chunk => chunk.text);
+            const transcripts = (youtubeData.transcript as { text: string, startTime: number, endTime: number }[]).map(chunk => chunk.text);
             const fullTranscript = transcripts.join(" ");
 
             const mindMap = await generateMindMap(fullTranscript);
@@ -180,8 +184,8 @@ export async function GET(req: NextRequest) {
                 }
             }
 
-            await prisma.metadata.update({
-                where: { youtube_id: video_id },
+            await prisma.contentMetadata.update({
+                where: { content_id },
                 data: { mindmap: mindMapJson }
             });
 

@@ -2,13 +2,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
-import { verifyJwtToken } from "@/lib/jwt";
+import { getAuthUser, signSessionToken, setSessionCookie } from "@/lib/auth";
 
 export async function PUT(req: NextRequest) {
   try {
+    const authUser = await getAuthUser(req);
+    if (!authUser) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     // 1) Parse request body
     const {
-      userId,
+      email,
       username,
       firstName,
       lastName,
@@ -30,33 +35,28 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // 3) Retrieve JWT from Authorization header
-    //    (If you have global middleware, it may already fail before here if missing or invalid.)
-    const authHeader = req.headers.get("Authorization") || "";
-    const token = authHeader.split(" ")[1];
-
-    if (!token) {
-      return NextResponse.json({ message: "Token missing" }, { status: 401 });
-    }
-
-    // 4) Verify token
-    const payload = await verifyJwtToken(token, process.env.JWT_SECRET!);
-
-    // Ensure the user in the token matches the user being updated
-    if (payload?.user_id !== userId) {
-      return NextResponse.json(
-        { message: "Unauthorized: Token does not match user" },
-        { status: 403 }
-      );
-    }
-
-    // 5) Fetch current user from DB
-    const user = await prisma.user.findUnique({ where: { user_id: userId } });
+    // 2) Fetch current user from DB
+    const user = await prisma.user.findUnique({
+      where: { user_id: authUser.user_id },
+    });
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    // 6) If user is changing username, ensure it's unique
+    // 3) If user is changing email, ensure it's unique
+    if (email && email !== user.email) {
+      const existingEmail = await prisma.user.findUnique({
+        where: { email },
+      });
+      if (existingEmail) {
+        return NextResponse.json(
+          { message: "Email is already taken" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 4) If user is changing username, ensure it's unique
     if (username && username !== user.username) {
       const existingUser = await prisma.user.findUnique({
         where: { username },
@@ -69,7 +69,7 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    // 7) If newPassword is provided, validate current password
+    // 5) If newPassword is provided, validate current password
     let updatedPassword = user.password;
     if (newPassword) {
       if (!currentPassword) {
@@ -91,10 +91,11 @@ export async function PUT(req: NextRequest) {
       updatedPassword = await bcrypt.hash(newPassword, 10);
     }
 
-    // 8) Update the user
+    // 6) Update the user
     const updatedUser = await prisma.user.update({
-      where: { user_id: userId },
+      where: { user_id: authUser.user_id },
       data: {
+        email: email ?? user.email,
         username: username ?? user.username,
         first_name: firstName,
         last_name: lastName,
@@ -103,11 +104,12 @@ export async function PUT(req: NextRequest) {
     });
 
     // 9) Return success response (omit sensitive info like password)
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         message: "Profile updated successfully",
         user: {
           user_id: updatedUser.user_id,
+          email: updatedUser.email,
           username: updatedUser.username,
           first_name: updatedUser.first_name,
           last_name: updatedUser.last_name,
@@ -115,6 +117,15 @@ export async function PUT(req: NextRequest) {
       },
       { status: 200 }
     );
+    const newToken = await signSessionToken({
+      user_id: updatedUser.user_id,
+      email: updatedUser.email,
+      first_name: updatedUser.first_name,
+      last_name: updatedUser.last_name,
+      username: updatedUser.username,
+    });
+    setSessionCookie(response, newToken);
+    return response;
   } catch (error) {
     console.error("Error updating user:", error);
     return NextResponse.json(

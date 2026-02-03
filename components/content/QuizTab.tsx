@@ -4,11 +4,9 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { useSpaces } from "@/hooks/space-provider";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "@/hooks/auth-provider";
 
 interface QuizQuestion {
   question: string;
@@ -28,36 +26,18 @@ export default function QuizTab({
   activeMainTab,
 }: QuizTabProps) {
   const { id } = useParams();
-  const { spaces } = useSpaces();
   const [isLoading, setIsLoading] = useState(false);
-  const [youtube_id, setYoutubeId] = useState<string>("");
-  const [content_id, setContentId] = useState<string>("");
   const [quizData, setQuizData] = useState<QuizQuestion[]>([]);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
-  const { user } = useAuth();
 
   useEffect(() => {
     if (activeMainTab !== value) return; // Only proceed if this tab is active
     
-    setIsLoading(true);
-    // Find the content across all spaces
-    for (const space of spaces) {
-      const content = space.contents?.find(content => content.id === id);
-      if (content) {
-        setYoutubeId(content.youtube_id);
-        setContentId(content.id);
-        break;
-      }
-    }
-
-    if (youtube_id && content_id) {
+    if (id) {
+      setIsLoading(true);
       async function fetchData() {
         try {
-          const response = await axios.get(`/api/generate/quiz?video_id=${youtube_id}&content_id=${content_id}`, {
-            headers: {
-              authorization: user?.token
-            }
-          });
+          const response = await axios.get(`/api/generate/quiz?content_id=${id}`);
           
           // @ts-expect-error response.data.data type is unknown
           if (response?.data?.data?.questions) {
@@ -73,7 +53,7 @@ export default function QuizTab({
 
       fetchData();
     }
-  }, [spaces, id, youtube_id, content_id, activeMainTab, value, user?.token]);
+  }, [id, activeMainTab, value]);
 
   const handleAnswerSelect = (qIndex: number, oIndex: number) => {
     setSelectedAnswers(prev => ({

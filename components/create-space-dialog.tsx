@@ -17,7 +17,7 @@ import { Plus } from "lucide-react";
 
 interface CreateSpaceDialogProps {
   onCreateSpace: (name: string) => void;
-  children?: React.ReactNode; // Allow children to be passed
+  children?: React.ReactNode;
 }
 
 export function CreateSpaceDialog({ onCreateSpace }: CreateSpaceDialogProps) {
@@ -36,10 +36,12 @@ export function CreateSpaceDialog({ onCreateSpace }: CreateSpaceDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="dark:bg-gray-900 border" variant="outline">
-          <Plus className="mr-2 h-4 w-4" />
-          New Space
-        </Button>
+        {children ?? (
+          <Button className="dark:bg-gray-900 border" variant="outline">
+            <Plus className="mr-2 h-4 w-4" />
+            New Space
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

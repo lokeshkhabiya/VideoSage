@@ -2,7 +2,8 @@ import { jwtVerify, JWTPayload } from "jose";
 
 interface MyJWTPayload extends JWTPayload {
   user_id: string;
-  username: string;
+  email?: string;
+  username?: string | null;
   first_name: string;
   last_name: string;
 }

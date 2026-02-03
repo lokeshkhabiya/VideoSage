@@ -19,19 +19,12 @@ import {
 import axios from "axios";
 import { useAuth } from "@/hooks/auth-provider";
 
-interface DecodedToken {
-  user_id: string;
-  username: string;
-  first_name: string;
-  last_name: string;
-}
-
 export default function SignIn() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const { user, login } = useAuth();
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
   });
   const pathname = usePathname();
@@ -49,31 +42,23 @@ export default function SignIn() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post("/api/users/signin", {
-        username: formData.username,
+      const response = await axios.post("/api/auth/login", {
+        email: formData.email,
         password: formData.password,
       });
 
       if (
         response?.data &&
         typeof response.data === "object" &&
-        "token" in response.data &&
         response.status === 200
       ) {
-        const token = response.data.token as string;
-        const decodedToken: DecodedToken = JSON.parse(
-          atob(token.split(".")[1])
-        );
-
-        login({
-          user_id: decodedToken.user_id,
-          username: decodedToken.username,
-          first_name: decodedToken.first_name,
-          last_name: decodedToken.last_name,
-          email: formData.username, // Assuming username is the email
-          name: `${decodedToken.first_name} ${decodedToken.last_name}`, // Construct the name
-          token,
-        });
+        const apiUser = response.data.user;
+        if (apiUser) {
+          login({
+            ...apiUser,
+            name: `${apiUser.first_name ?? ""} ${apiUser.last_name ?? ""}`.trim(),
+          });
+        }
 
         router.push("/dashboard");
       }
@@ -120,16 +105,16 @@ export default function SignIn() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Username / Email</Label>
+                  <Label htmlFor="email">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <Input
-                      id="username"
-                      name="username"
-                      type="username"
+                      id="email"
+                      name="email"
+                      type="email"
                       placeholder="you@example.com"
                       required
-                      value={formData.username}
+                      value={formData.email}
                       onChange={handleChange}
                       className="pl-10"
                     />

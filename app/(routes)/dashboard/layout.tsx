@@ -17,7 +17,7 @@ export default function RootLayout({
   const [inputValue, setInputValue] = useState("");
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(false);
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const { setSpaces, setLoading, loading, addContentToSpace } = useSpaces();
 
   const router = useRouter();
@@ -26,6 +26,7 @@ export default function RootLayout({
   // 1) If not authenticated, redirect; otherwise fetch user’s spaces once
   // -------------------------------
   useEffect(() => {
+    if (authLoading) return;
     if (!isAuthenticated) {
       router.replace("/signin");
       return;
@@ -34,9 +35,7 @@ export default function RootLayout({
     async function fetchSpaces() {
       setLoading(true);
       try {
-        const res = await fetch("/api/spaces", {
-          headers: { Authorization: `Bearer ${user?.token}` },
-        });
+        const res = await fetch("/api/spaces");
         if (!res.ok) throw new Error("Failed to fetch spaces");
         const data = await res.json();
         setSpaces(data.spaces);
@@ -47,9 +46,9 @@ export default function RootLayout({
       }
     }
     fetchSpaces();
-  }, [isAuthenticated, user?.token, router, setSpaces, setLoading]);
+  }, [isAuthenticated, authLoading, router, setSpaces, setLoading]);
 
-  if (!isAuthenticated || loading) {
+  if (authLoading || !isAuthenticated || loading) {
     return <div className="flex items-center justify-center h-full">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
   </div>
@@ -84,9 +83,7 @@ export default function RootLayout({
       const res = await fetch("/api/contents", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${user?.token}`,
           "Content-Type": "application/json",
-          user: JSON.stringify({ user_id: user?.user_id }),
         },
         body: JSON.stringify({
           youtube_url: inputValue.trim(),

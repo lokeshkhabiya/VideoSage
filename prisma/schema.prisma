@@ -4,13 +4,12 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 model User {
   user_id    String   @id @default(uuid())
-  username   String   @db.VarChar(255) @unique 
+  email      String   @db.VarChar(255) @unique
+  username   String?  @db.VarChar(255) @unique 
   first_name String   @db.VarChar(255) 
   last_name  String   @db.VarChar(255)
   password   String   @db.VarChar(255)
@@ -44,6 +43,8 @@ model Content {
   youtubeContent  YoutubeContent?  
   documentContent DocumentContent?  
   chatrooms       ChatRoom[]
+  metadata        ContentMetadata?
+  processingJobs  ContentProcessingJob[]
 }
 
 model SpaceContent {
@@ -73,7 +74,6 @@ model YoutubeContent {
   transcript    Json
   youtube_url   String  @db.Text
   content       Content @relation(fields: [content_id], references: [content_id], onDelete: Cascade)
-  metadata      Metadata[]
 }
 
 model DocumentContent {
@@ -85,16 +85,40 @@ model DocumentContent {
   content    Content @relation(fields: [content_id], references: [content_id], onDelete: Cascade)
 }
 
-model Metadata {
-  metadata_id String  @id @default(uuid())
-  youtube_id  String  @unique
-  summary     String?  
-  flashcards  Json?  
-  mindmap     Json?  
-  quiz        Json?  
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @updatedAt
-  youtubeContent YoutubeContent @relation(fields: [youtube_id], references: [youtube_id], onDelete: Cascade)
+model ContentMetadata {
+  content_id String @id
+  summary    String?
+  flashcards Json?
+  mindmap    Json?
+  quiz       Json?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  content    Content @relation(fields: [content_id], references: [content_id], onDelete: Cascade)
+}
+
+enum ProcessingStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ProcessingStep {
+  TRANSCRIPT
+  EMBEDDINGS
+}
+
+model ContentProcessingJob {
+  job_id     String           @id @default(uuid())
+  content_id String
+  status     ProcessingStatus
+  step       ProcessingStep
+  error      String?
+  created_at DateTime         @default(now())
+  updated_at DateTime         @updatedAt
+  content    Content          @relation(fields: [content_id], references: [content_id], onDelete: Cascade)
+
+  @@index([content_id, status])
 }
 
 model ChatRoom {

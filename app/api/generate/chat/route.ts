@@ -2,48 +2,89 @@ import { Message } from "ai/react";
 import { NextRequest } from "next/server";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { queryPineconeVectorStore } from "@/lib/utils";
-import { createGoogleGenerativeAI } from "@ai-sdk/google"
-import { streamText } from "ai"
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { streamText } from "ai";
+import prisma from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
 
 const google = createGoogleGenerativeAI({
-    baseURL: "https://generativelanguage.googleapis.com/v1beta",
-    apiKey: process.env.GEMINI_API_KEY
-})
+	apiKey: process.env.GEMINI_API_KEY,
+});
 
-const model = google.languageModel("gemini-1.5-flash")
+const model = google("gemini-1.5-flash");
 
-const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! })
+const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! });
 
 export async function POST(req: NextRequest) {
-    try {
-        const reqBody = await req.json();
-        const video_id = reqBody.data.video_id;
+	try {
+		const authUser = await getAuthUser(req);
+		if (!authUser) {
+			return new Response(
+				JSON.stringify({ error: "Unauthorized" }),
+				{ status: 401, headers: { "Content-Type": "application/json" } }
+			);
+		}
 
-        if (!video_id) {
-            throw new Error("Missing video_id in request data");
-        }
+		const reqBody = await req.json();
+		const content_id = reqBody.data.content_id;
 
-        const messages: Message[] = reqBody.messages;
-        const userQuestion = messages[messages.length - 1].content;
-        
-        console.log("Processing chat request for video:", video_id);
-        console.log("User question:", userQuestion);
-        
-        let retrievals = "";
-        try {
-            // Simplified search query
-            const searchQuery = userQuestion;
-            console.log("searchQuery", searchQuery);
-            retrievals = await queryPineconeVectorStore(pc, "youtube-content", "videosage-namespace-3", video_id, searchQuery);
-            console.log(retrievals);
-            console.log("Successfully retrieved context from vector store");
-        } catch (retrievalError) {
-            console.error("Error retrieving context:", retrievalError);
-            retrievals = "<Error retrieving context. Proceeding with general knowledge.>";
-        }
+		if (!content_id) {
+			throw new Error("Missing content_id in request data");
+		}
 
-        // final prompt to gemini api
-        const finalPrompt = `You are a helpful and informative assistant designed to answer questions about YouTube videos. You will be provided with:
+		const userContent = await prisma.userContent.findUnique({
+			where: {
+				user_id_content_id: {
+					user_id: authUser.user_id,
+					content_id,
+				},
+			},
+		});
+
+		if (!userContent) {
+			return new Response(
+				JSON.stringify({ error: "Content not found" }),
+				{ status: 404, headers: { "Content-Type": "application/json" } }
+			);
+		}
+
+		const content = await prisma.youtubeContent.findUnique({
+			where: { content_id },
+		});
+
+		const video_id = content?.youtube_id;
+		if (!video_id) {
+			throw new Error("Missing youtube_id for content");
+		}
+
+		const messages: Message[] = reqBody.messages;
+		const userQuestion = messages[messages.length - 1].content;
+
+		console.log("Processing chat request for video:", video_id);
+		console.log("User question:", userQuestion);
+
+		let retrievals = "";
+		try {
+			// Simplified search query
+			const searchQuery = userQuestion;
+			console.log("searchQuery", searchQuery);
+			retrievals = await queryPineconeVectorStore(
+				pc,
+				process.env.PINECONE_INDEX || "youtube-content",
+				process.env.PINECONE_NAMESPACE || "videosage-namespace-3",
+				video_id,
+				searchQuery,
+			);
+			console.log(retrievals);
+			console.log("Successfully retrieved context from vector store");
+		} catch (retrievalError) {
+			console.error("Error retrieving context:", retrievalError);
+			retrievals =
+				"<Error retrieving context. Proceeding with general knowledge.>";
+		}
+
+		// final prompt to gemini api
+		const finalPrompt = `You are a helpful and informative assistant designed to answer questions about YouTube videos. You will be provided with:
 
         1. **The user's question:** (This will be dynamically inserted.)
         2. **Contextual information retrieved from the video's transcript and metadata:** (This will be dynamically inserted as relevant chunks from the vector database.)
@@ -73,29 +114,29 @@ export async function POST(req: NextRequest) {
         ${retrievals}
 
         Previous Messages:
-        ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
+        ${messages.map((m) => `${m.role}: ${m.content}`).join("\n")}
         
         Provide a well-structured, informative response that thoroughly addresses the question.`;
 
-        // stream response from gemini 
-        const result = await streamText({
-            model: model,
-            prompt: finalPrompt
-        });
+		// stream response from gemini
+		const result = streamText({
+			model: model,
+			prompt: finalPrompt,
+		});
 
-        return result.toDataStreamResponse();
-    } catch (error) {
-        console.error("Error in chat API:", error);
-        // Return a proper error response
-        return new Response(
-            JSON.stringify({ 
-                error: "Failed to process chat request", 
-                details: error instanceof Error ? error.message : String(error) 
-            }),
-            { 
-                status: 500, 
-                headers: { 'Content-Type': 'application/json' } 
-            }
-        );
-    }
+		return result.toDataStreamResponse();
+	} catch (error) {
+		console.error("Error in chat API:", error);
+		// Return a proper error response
+		return new Response(
+			JSON.stringify({
+				error: "Failed to process chat request",
+				details: error instanceof Error ? error.message : String(error),
+			}),
+			{
+				status: 500,
+				headers: { "Content-Type": "application/json" },
+			},
+		);
+	}
 }

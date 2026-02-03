@@ -1,36 +1,43 @@
-/*
-  Warnings:
+-- CreateEnum
+CREATE TYPE "ContentType" AS ENUM ('YOUTUBE_CONTENT', 'DOCUMENT_CONTENT');
 
-  - You are about to drop the column `space_id` on the `Content` table. All the data in the column will be lost.
-  - You are about to drop the column `user_id` on the `Content` table. All the data in the column will be lost.
-  - Changed the type of `transcript` on the `YoutubeContent` table. No cast exists, the column would be dropped and recreated, which cannot be done if there is data, since the column is required.
+-- CreateEnum
+CREATE TYPE "ProcessingStatus" AS ENUM ('QUEUED', 'PROCESSING', 'COMPLETED', 'FAILED');
 
-*/
--- DropForeignKey
-ALTER TABLE "Content" DROP CONSTRAINT "Content_space_id_fkey";
+-- CreateEnum
+CREATE TYPE "ProcessingStep" AS ENUM ('TRANSCRIPT', 'EMBEDDINGS');
 
--- DropForeignKey
-ALTER TABLE "Content" DROP CONSTRAINT "Content_user_id_fkey";
+-- CreateTable
+CREATE TABLE "User" (
+    "user_id" TEXT NOT NULL,
+    "email" VARCHAR(255) NOT NULL,
+    "username" VARCHAR(255),
+    "first_name" VARCHAR(255) NOT NULL,
+    "last_name" VARCHAR(255) NOT NULL,
+    "password" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
--- DropForeignKey
-ALTER TABLE "DocumentContent" DROP CONSTRAINT "DocumentContent_content_id_fkey";
+    CONSTRAINT "User_pkey" PRIMARY KEY ("user_id")
+);
 
--- DropForeignKey
-ALTER TABLE "Space" DROP CONSTRAINT "Space_user_id_fkey";
+-- CreateTable
+CREATE TABLE "Space" (
+    "space_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "space_name" TEXT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
--- DropForeignKey
-ALTER TABLE "YoutubeContent" DROP CONSTRAINT "YoutubeContent_content_id_fkey";
+    CONSTRAINT "Space_pkey" PRIMARY KEY ("space_id")
+);
 
--- AlterTable
-ALTER TABLE "Content" DROP COLUMN "space_id",
-DROP COLUMN "user_id";
+-- CreateTable
+CREATE TABLE "Content" (
+    "content_id" TEXT NOT NULL,
+    "content_type" "ContentType" NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
--- AlterTable
-ALTER TABLE "Space" ALTER COLUMN "space_name" SET DATA TYPE TEXT;
-
--- AlterTable
-ALTER TABLE "YoutubeContent" DROP COLUMN "transcript",
-ADD COLUMN     "transcript" JSONB NOT NULL;
+    CONSTRAINT "Content_pkey" PRIMARY KEY ("content_id")
+);
 
 -- CreateTable
 CREATE TABLE "SpaceContent" (
@@ -49,9 +56,32 @@ CREATE TABLE "UserContent" (
 );
 
 -- CreateTable
-CREATE TABLE "Metadata" (
-    "metadata_id" TEXT NOT NULL,
+CREATE TABLE "YoutubeContent" (
+    "content_id" TEXT NOT NULL,
     "youtube_id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "thumbnail_url" TEXT NOT NULL,
+    "transcript" JSONB NOT NULL,
+    "youtube_url" TEXT NOT NULL,
+
+    CONSTRAINT "YoutubeContent_pkey" PRIMARY KEY ("content_id")
+);
+
+-- CreateTable
+CREATE TABLE "DocumentContent" (
+    "content_id" TEXT NOT NULL,
+    "filename" VARCHAR(255) NOT NULL,
+    "file_url" VARCHAR(255) NOT NULL,
+    "doc_id" TEXT NOT NULL,
+    "hash" TEXT NOT NULL,
+
+    CONSTRAINT "DocumentContent_pkey" PRIMARY KEY ("content_id")
+);
+
+-- CreateTable
+CREATE TABLE "ContentMetadata" (
+    "content_id" TEXT NOT NULL,
     "summary" TEXT,
     "flashcards" JSONB,
     "mindmap" JSONB,
@@ -59,7 +89,20 @@ CREATE TABLE "Metadata" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Metadata_pkey" PRIMARY KEY ("metadata_id")
+    CONSTRAINT "ContentMetadata_pkey" PRIMARY KEY ("content_id")
+);
+
+-- CreateTable
+CREATE TABLE "ContentProcessingJob" (
+    "job_id" TEXT NOT NULL,
+    "content_id" TEXT NOT NULL,
+    "status" "ProcessingStatus" NOT NULL,
+    "step" "ProcessingStep" NOT NULL,
+    "error" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ContentProcessingJob_pkey" PRIMARY KEY ("job_id")
 );
 
 -- CreateTable
@@ -86,7 +129,22 @@ CREATE TABLE "Message" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Metadata_youtube_id_key" ON "Metadata"("youtube_id");
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "YoutubeContent_youtube_id_key" ON "YoutubeContent"("youtube_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DocumentContent_doc_id_key" ON "DocumentContent"("doc_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DocumentContent_hash_key" ON "DocumentContent"("hash");
+
+-- CreateIndex
+CREATE INDEX "ContentProcessingJob_content_id_status_idx" ON "ContentProcessingJob"("content_id", "status");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ChatRoom_content_id_user_id_key" ON "ChatRoom"("content_id", "user_id");
@@ -113,7 +171,10 @@ ALTER TABLE "YoutubeContent" ADD CONSTRAINT "YoutubeContent_content_id_fkey" FOR
 ALTER TABLE "DocumentContent" ADD CONSTRAINT "DocumentContent_content_id_fkey" FOREIGN KEY ("content_id") REFERENCES "Content"("content_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Metadata" ADD CONSTRAINT "Metadata_youtube_id_fkey" FOREIGN KEY ("youtube_id") REFERENCES "YoutubeContent"("youtube_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ContentMetadata" ADD CONSTRAINT "ContentMetadata_content_id_fkey" FOREIGN KEY ("content_id") REFERENCES "Content"("content_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ContentProcessingJob" ADD CONSTRAINT "ContentProcessingJob_content_id_fkey" FOREIGN KEY ("content_id") REFERENCES "Content"("content_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ChatRoom" ADD CONSTRAINT "ChatRoom_content_id_fkey" FOREIGN KEY ("content_id") REFERENCES "Content"("content_id") ON DELETE CASCADE ON UPDATE CASCADE;

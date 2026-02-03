@@ -5,9 +5,7 @@ import { Card } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import * as go from "gojs";
 import { ReactDiagram } from "gojs-react";
-import { useSpaces } from "@/hooks/space-provider";
 import { useParams } from "next/navigation";
-import { useAuth } from "@/hooks/auth-provider";
 import axios from "axios";
 
 interface MindMapTabProps {
@@ -33,39 +31,20 @@ export default function MindMapTab({
   activeMainTab,
 }: MindMapTabProps) {
   const [mindMapData, setMindMapData] = useState<MindMapData | null>(null);
-  const [youtube_id, setYoutubeId] = useState<string>("");
-  const [content_id, setContentId] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const { id } = useParams();
-  const { spaces } = useSpaces();
-  const { user } = useAuth();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
-    // Find the content across all spaces
-    for (const space of spaces) {
-      const content = space.contents?.find(content => content.id === id);
-      if (content) {
-        setYoutubeId(content.youtube_id);
-        setContentId(content.id);
-        break;
-      }
-    }
 
-    if (youtube_id && content_id) {
+    if (id) {
       async function fetchMindMap() {
         try {
           setLoading(true);
           setError(null);
           const response = await axios.get(
-            `/api/generate/mindmap?video_id=${youtube_id}&content_id=${content_id}`,
-            {
-              headers: {
-                authorization: user?.token
-              }
-            }
+            `/api/generate/mindmap?content_id=${id}`
           );
           const data = await response?.data;
           if (data) {
@@ -82,7 +61,7 @@ export default function MindMapTab({
 
       fetchMindMap();
     }
-  }, [spaces, id, youtube_id, content_id, user?.token]);
+  }, [id]);
 
   // Initialize the diagram
   function initDiagram() {

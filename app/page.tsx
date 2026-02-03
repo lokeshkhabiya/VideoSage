@@ -11,7 +11,7 @@ import {
   MessageSquare,
   Sparkles,
 } from "lucide-react";
-import { useAuthStore } from "@/hooks/auth-provider";
+import { useAuth } from "@/hooks/auth-provider";
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -21,23 +21,23 @@ const fadeIn = {
 
 export default function Home() {
 
-  const { isAuthenticated } = useAuthStore(); 
+  const { isAuthenticated } = useAuth(); 
 
   const handleRedirect = () => {
     if (isAuthenticated) {
-      if (typeof window != undefined) {
+      if (typeof window !== "undefined") {
         window.location.replace("/dashboard")
       }
     } else {
-      if (typeof window != undefined) {
+      if (typeof window !== "undefined") {
         window.location.replace("/signup")
       }
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-500 px-4">
-      <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-gray-900 [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#63e_100%)] dark:[background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)] opacity-30"></div>
+    <div className="min-h-screen bg-gradient-to-b from-[#f6f2eb] to-white dark:from-[#0c1117] dark:to-[#0a0f14] transition-colors duration-500 px-4">
+      <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-[#0a0f14] [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#0ea5a4_100%)] dark:[background:radial-gradient(125%_125%_at_50%_10%,#0a0f14_40%,#0f766e_100%)] opacity-25"></div>
 
       <main className="container mx-auto ">
         <motion.section
@@ -47,7 +47,7 @@ export default function Home() {
           variants={fadeIn}
         >
           <motion.h1
-            className="text-5xl md:text-6xl font-bold text-gray-800 dark:text-white mb-6"
+            className="text-5xl md:text-6xl font-display font-bold text-gray-800 dark:text-white mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
@@ -96,7 +96,7 @@ export default function Home() {
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-12 text-center">
+          <h2 className="text-3xl font-display font-bold text-gray-800 dark:text-white mb-12 text-center">
             Powerful Features
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 cursor-pointer">
@@ -152,7 +152,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.7, ease: "easeOut", delay: index * 0.15 }}
               >
-                <feature.icon className="h-12 w-12 text-blue-600 dark:text-blue-400 mb-4" />
+                <feature.icon className="h-12 w-12 text-teal-700 dark:text-teal-300 mb-4" />
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
                   {feature.title}
                 </h3>
@@ -171,7 +171,7 @@ export default function Home() {
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
+          <h2 className="text-3xl font-display font-bold text-gray-800 dark:text-white mb-6">
             Ready to Enhance Your Learning?
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">

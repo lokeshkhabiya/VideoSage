@@ -16,8 +16,10 @@ interface LeftPanelProps {
 }
 
 interface TranscriptSegment {
-  time: string;
   text: string;
+  startTime?: number | null;
+  endTime?: number | null;
+  time?: string;
 }
 
 export default function LeftPanel({
@@ -40,6 +42,15 @@ export default function LeftPanel({
     }));
   };
 
+  const formatTimestamp = (time?: number | null) => {
+    if (typeof time !== "number") return "--:--";
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
   const fetchTranscriptAndVideoDetails = useCallback(async () => {
     try {
       const res = await fetch(`/api/contents?id=${id}`);
@@ -49,7 +60,10 @@ export default function LeftPanel({
       // setCurrentThumbnail(data.thumbnailUrl);
 
       // Parse and set the transcript
-      const parsedTranscript = parseTranscript(data.transcript);
+      const rawTranscript = Array.isArray(data.transcript)
+        ? data.transcript
+        : [];
+      const parsedTranscript = parseTranscript(rawTranscript);
       setTranscript(parsedTranscript);
     } catch (error) {
       console.error("Error fetching transcript and video details:", error);
@@ -135,7 +149,7 @@ export default function LeftPanel({
                     className="flex space-x-4 p-4 hover:bg-muted/50 rounded-lg cursor-pointer"
                   >
                     <span className="text-sm text-muted-foreground whitespace-nowrap">
-                      {segment.time}
+                      {segment.time ?? formatTimestamp(segment.startTime)}
                     </span>
                     <p className="text-sm">{segment.text}</p>
                   </div>

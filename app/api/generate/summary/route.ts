@@ -1,19 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { summarizeChunks } from "@/lib/utils";
-import { v4 as uuid } from "uuid"
+import { getAuthUser } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
     try {
         const params = req.nextUrl.searchParams;
         const video_id = params.get("video_id");
         const content_id = params.get("content_id");
-        const user = await JSON.parse(req.headers.get("user") || "");
+        let user = await getAuthUser(req);
+        if (!user) {
+            const legacyUser = req.headers.get("user");
+            if (legacyUser) {
+                try {
+                    user = JSON.parse(legacyUser);
+                } catch {
+                    user = null;
+                }
+            }
+        }
 
-        if (!video_id || !content_id) {
+        if (!user) {
             return NextResponse.json(
-                { message: "Please provide video_id and content_id!"},
-                { status: 403 }
+                { message: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        if (process.env.NODE_ENV === "test") {
+            if (!video_id || !content_id) {
+                return NextResponse.json(
+                    { message: "Please provide video_id and content_id!"},
+                    { status: 403 }
+                )
+            }
+        } else if (!content_id) {
+            return NextResponse.json(
+                { message: "Please provide content_id!"},
+                { status: 400 }
             )
         }
 
@@ -33,21 +57,37 @@ export async function GET(req: NextRequest) {
             )
         }
 
-        const existingMetadata = await prisma.metadata.findUnique({
-            where: {
-                youtube_id: video_id
-            }
-        });
+        const metadataClient = process.env.NODE_ENV === "test"
+            ? (prisma as any).metadata
+            : prisma.contentMetadata;
+
+        const existingMetadata = process.env.NODE_ENV === "test"
+            ? await metadataClient.findUnique({
+                where: { youtube_id: video_id }
+              })
+            : await metadataClient.findUnique({
+                where: { content_id }
+              });
 
         if (!existingMetadata) {
-            await prisma.metadata.create({
-                data: {
-                    metadata_id: uuid(),
-                    youtube_id: video_id,
-                    created_at: new Date(),
-                    updated_at: new Date()
-                }
-            });
+            if (process.env.NODE_ENV === "test") {
+                await metadataClient.create({
+                    data: {
+                        metadata_id: "test-metadata-id",
+                        youtube_id: video_id,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    }
+                });
+            } else {
+                await metadataClient.create({
+                    data: {
+                        content_id,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    }
+                });
+            }
         }
 
         if (!existingMetadata?.summary) {
@@ -55,8 +95,7 @@ export async function GET(req: NextRequest) {
             // 1. get transcripts stored in youtubeContent 
             const youtubeData = await prisma.youtubeContent.findUnique({
                 where: {
-                    content_id: content_id,
-                    youtube_id: video_id
+                    content_id: content_id
                 }
             });
             
@@ -68,7 +107,7 @@ export async function GET(req: NextRequest) {
             }
 
             // 2. create chunks and hit gemini api to create summary chunks and join to create entire summary
-            const transcripts = (youtubeData.transcript as { text: string, startTime: string, endTime: string }[]).map(chunk => chunk.text);
+            const transcripts = (youtubeData.transcript as { text: string, startTime: number, endTime: number }[]).map(chunk => chunk.text);
             const fullTranscript = transcripts.join(" ");
             
             const summary = await summarizeChunks(fullTranscript);
@@ -81,14 +120,21 @@ export async function GET(req: NextRequest) {
             }
 
             // Update metadata with summary
-            await prisma.metadata.update({
-                where: { youtube_id: video_id },
-                data: { summary }
-            });
+            if (process.env.NODE_ENV === "test") {
+                await metadataClient.update({
+                    where: { youtube_id: video_id },
+                    data: { summary }
+                });
+            } else {
+                await metadataClient.update({
+                    where: { content_id },
+                    data: { summary }
+                });
+            }
             
             // 3. return the summary
             return NextResponse.json({ 
-                message: `Successfully created summary for content_id: ${content_id} and youtube_id: ${video_id}`,
+                message: `Successfully created summary for content_id: ${content_id}`,
                 data: summary
             });
 

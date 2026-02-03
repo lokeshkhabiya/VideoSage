@@ -1,38 +1,43 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { verifyJwtToken } from '@/lib/jwt'
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getSessionToken, verifySessionToken } from "@/lib/auth";
+
+const PUBLIC_API_PREFIXES = [
+  "/api/auth/login",
+  "/api/auth/signup",
+  "/api/auth/logout",
+  "/api/auth/me",
+  "/api/users/signin",
+  "/api/users/signup",
+  "/api/health",
+];
 
 export const config = {
-  matcher: ['/api/content/:path*', '/api/generate/:path*']
-}
+  matcher: ["/api/:path*"],
+};
 
 export async function middleware(request: NextRequest) {
-  const token = request.headers.get('authorization')
+  const { pathname } = request.nextUrl;
 
+  if (PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+    return NextResponse.next();
+  }
+
+  const token = getSessionToken(request);
   if (!token) {
     return NextResponse.json(
-      { message: 'Authentication token is required' },
+      { message: "Unauthorized: missing session" },
       { status: 401 }
-    )
+    );
   }
 
-  try {
-    const decoded = await verifyJwtToken(token, process.env.JWT_SECRET!);
-    
-    // Clone the headers and create new request with modified headers
-    const requestHeaders = new Headers(request.headers)
-    requestHeaders.set('user', JSON.stringify(decoded))
-
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders
-      }
-    })
-  } catch (error) {
+  const payload = await verifySessionToken(token);
+  if (!payload) {
     return NextResponse.json(
-      { message: 'Invalid authentication token' },
+      { message: "Unauthorized: invalid session" },
       { status: 401 }
-    )
+    );
   }
-}
 
+  return NextResponse.next();
+}

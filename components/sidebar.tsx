@@ -12,15 +12,15 @@ import { useSpaces } from "@/hooks/space-provider";
 
 export function Sidebar() {
   const { user, logout } = useAuth();
-  const { spaces, addSpace } = useSpaces();
+  const { spaces, createSpace } = useSpaces();
   const router = useRouter();
 
-  const onCreateSpace = (name: string) => {
-    const newSpace = {
-      id: name.toLowerCase().replace(/\s+/g, "-"),
-      name,
-    };
-    addSpace(newSpace);
+  const onCreateSpace = async (name: string) => {
+    try {
+      await createSpace(name);
+    } catch (error) {
+      console.error("Failed to create space:", error);
+    }
   };
 
   return (
