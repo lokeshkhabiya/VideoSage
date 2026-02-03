@@ -2,27 +2,30 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { YoutubeTranscript } from "youtube-transcript";
 import { Pinecone, Index } from "@pinecone-database/pinecone";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { generateText } from "ai";
-import { HfInference } from "@huggingface/inference";
+import { embed, embedMany, generateText } from "ai";
 import axios from "axios";
+import {
+	getChatModel,
+	getEmbeddingModel,
+	getFallbackChatModel,
+} from "@/lib/ai";
 
-// Initialize clients in functions where they are needed
-const getHfClient = () => {
-	if (!process.env.HF_TOKEN) {
-		throw new Error("HF_TOKEN is not defined");
+const generateTextWithFallback = async (prompt: string) => {
+	try {
+		return await generateText({
+			model: getChatModel(),
+			prompt,
+		});
+	} catch (error) {
+		console.warn(
+			"Primary chat model failed, retrying with fallback:",
+			error,
+		);
+		return await generateText({
+			model: getFallbackChatModel(),
+			prompt,
+		});
 	}
-	return new HfInference(process.env.HF_TOKEN);
-};
-
-const getGeminiModel = () => {
-	if (!process.env.GEMINI_API_KEY) {
-		throw new Error("GEMINI_API_KEY is not defined");
-	}
-	const google = createGoogleGenerativeAI({
-		apiKey: process.env.GEMINI_API_KEY,
-	});
-	return google("gemini-1.5-flash");
 };
 
 export interface transcriptInterface {
@@ -207,27 +210,37 @@ export const generateEmbeddings = async (
 	}[],
 	video_id: string,
 ) => {
-	const hf = getHfClient();
-	const results = [];
-	for (const [i, chunk] of chunks.entries()) {
+	const results: ChunkData[] = [];
+	const embeddingModel = getEmbeddingModel();
+	const batchSize = 50;
+
+	for (let i = 0; i < chunks.length; i += batchSize) {
+		const batch = chunks.slice(i, i + batchSize);
 		try {
-			const embedding = await hf.featureExtraction({
-				model: "mixedbread-ai/mxbai-embed-large-v1",
-				inputs: chunk.text,
+			const { embeddings } = await embedMany({
+				model: embeddingModel,
+				values: batch.map((chunk) => chunk.text),
 			});
 
-			results.push({
-				id: `${video_id}-chunk-${i}`,
-				video_id: video_id,
-				text: chunk.text,
-				startTime: chunk.startTime,
-				endTime: chunk.endTime,
-				vector: Array.from(embedding),
-			} as ChunkData);
+			embeddings.forEach((embedding, batchIndex) => {
+				const chunk = batch[batchIndex];
+				results.push({
+					id: `${video_id}-chunk-${i + batchIndex}`,
+					video_id: video_id,
+					text: chunk.text,
+					startTime: chunk.startTime as number,
+					endTime: chunk.endTime as number,
+					vector: Array.from(embedding),
+				});
+			});
 		} catch (error) {
-			console.error(`Error generating embedding for chunk ${i}:`, error);
+			console.error(
+				`Error generating embeddings for batch starting at index ${i}:`,
+				error,
+			);
 		}
 	}
+
 	return results;
 };
 
@@ -311,10 +324,9 @@ export const summarizeChunks = async (transcripts: string) => {
 
     Please provide a clear, comprehensive summary following these guidelines.`;
 
-	const { text } = await generateText({
-		model: getGeminiModel(),
-		prompt: `${prompt}\n\n${transcripts}`,
-	});
+	const { text } = await generateTextWithFallback(
+		`${prompt}\n\n${transcripts}`,
+	);
 	return text;
 };
 
@@ -354,10 +366,9 @@ export const generateFlashCards = async (transcripts: string) => {
                   }
                   Always format your response in JSON for consistency.
   `;
-	const { text } = await generateText({
-		model: getGeminiModel(),
-		prompt: `${prompt}\n\n${transcripts}`,
-	});
+	const { text } = await generateTextWithFallback(
+		`${prompt}\n\n${transcripts}`,
+	);
 	return text;
 };
 
@@ -391,10 +402,9 @@ export const generateQuiz = async (transcripts: string) => {
                     }
                   ]
                 }`;
-	const { text } = await generateText({
-		model: getGeminiModel(),
-		prompt: `${prompt}\n\n${transcripts}`,
-	});
+	const { text } = await generateTextWithFallback(
+		`${prompt}\n\n${transcripts}`,
+	);
 	return text;
 };
 
@@ -436,10 +446,9 @@ Generate a comprehensive but concise mindmap covering the key points from the vi
 
 	while (attempts < maxAttempts) {
 		try {
-			const { text } = await generateText({
-				model: getGeminiModel(),
-				prompt: `${prompt}\n\n${transcripts}`,
-			});
+			const { text } = await generateTextWithFallback(
+				`${prompt}\n\n${transcripts}`,
+			);
 			const response = text;
 
 			// Basic validation that response contains JSON structure
@@ -491,20 +500,19 @@ export async function queryPineconeVectorStore(
 	searchQuery: string,
 ): Promise<string> {
 	console.log("Querying Pinecone vector store");
-	const hf = getHfClient();
-	const hfoutput = await hf.featureExtraction({
-		model: "mixedbread-ai/mxbai-embed-large-v1",
-		inputs: searchQuery,
+	const embeddingModel = getEmbeddingModel();
+	const { embedding } = await embed({
+		model: embeddingModel,
+		value: searchQuery,
 	});
-	console.log("HF output generated");
-	const queryEmbedding = Array.from(hfoutput);
+	const queryEmbedding = Array.from(embedding);
 	console.log("Query embedding generated");
 	const index = client.index(indexname);
 	console.log("Index fetched");
 	console.log("Querying Pinecone vector store");
 	const queryResponse = await index.namespace(namespace).query({
 		topK: 5,
-		vector: queryEmbedding as number[],
+		vector: queryEmbedding,
 		includeMetadata: true,
 		includeValues: false,
 		filter: {

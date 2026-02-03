@@ -11,10 +11,12 @@
 !.yarn/versions
 
 # testing
-/coverage
+/test-reports
+/__tests__
 
 # next.js
 /.next/
+/.swc
 /out/
 
 # production

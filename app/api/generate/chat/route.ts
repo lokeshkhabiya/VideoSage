@@ -1,17 +1,12 @@
-import { Message } from "ai/react";
 import { NextRequest } from "next/server";
+
+type ChatMessage = { role: string; content: string };
 import { Pinecone } from "@pinecone-database/pinecone";
 import { queryPineconeVectorStore } from "@/lib/utils";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { streamText } from "ai";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
-
-const google = createGoogleGenerativeAI({
-	apiKey: process.env.GEMINI_API_KEY,
-});
-
-const model = google("gemini-1.5-flash");
+import { getChatModel, getFallbackChatModel } from "@/lib/ai";
 
 const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! });
 
@@ -57,7 +52,7 @@ export async function POST(req: NextRequest) {
 			throw new Error("Missing youtube_id for content");
 		}
 
-		const messages: Message[] = reqBody.messages;
+		const messages: ChatMessage[] = reqBody.messages;
 		const userQuestion = messages[messages.length - 1].content;
 
 		console.log("Processing chat request for video:", video_id);
@@ -83,7 +78,7 @@ export async function POST(req: NextRequest) {
 				"<Error retrieving context. Proceeding with general knowledge.>";
 		}
 
-		// final prompt to gemini api
+		// final prompt to OpenAI
 		const finalPrompt = `You are a helpful and informative assistant designed to answer questions about YouTube videos. You will be provided with:
 
         1. **The user's question:** (This will be dynamically inserted.)
@@ -118,13 +113,24 @@ export async function POST(req: NextRequest) {
         
         Provide a well-structured, informative response that thoroughly addresses the question.`;
 
-		// stream response from gemini
-		const result = streamText({
-			model: model,
-			prompt: finalPrompt,
-		});
+		let result: ReturnType<typeof streamText>;
+		try {
+			result = streamText({
+				model: getChatModel(),
+				prompt: finalPrompt,
+			});
+		} catch (streamError) {
+			console.warn(
+				"Primary chat model failed, retrying with fallback:",
+				streamError,
+			);
+			result = streamText({
+				model: getFallbackChatModel(),
+				prompt: finalPrompt,
+			});
+		}
 
-		return result.toDataStreamResponse();
+		return result.toUIMessageStreamResponse();
 	} catch (error) {
 		console.error("Error in chat API:", error);
 		// Return a proper error response

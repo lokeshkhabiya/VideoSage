@@ -20,6 +20,19 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Environment Variables
+
+Copy `.env.example` to `.env` and set the required values.
+
+- `OPENAI_API_KEY`
+- `OPENAI_CHAT_MODEL` (default: `gpt-5-mini`)
+- `OPENAI_FALLBACK_CHAT_MODEL` (default: `gpt-4o-mini`)
+- `OPENAI_EMBED_MODEL` (default: `text-embedding-3-small`)
+- `PINECONE_API_KEY`, `PINECONE_INDEX`, `PINECONE_NAMESPACE`
+- `YOUTUBE_APIKEY`, `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `REDIS_URL`
+
+Note: the Pinecone index dimension must match the embedding model (1536 for `text-embedding-3-small`).
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

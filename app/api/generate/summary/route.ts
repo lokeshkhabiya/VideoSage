@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
                 );
             }
 
-            // 2. create chunks and hit gemini api to create summary chunks and join to create entire summary
+            // 2. create chunks and hit OpenAI API to create summary chunks and join to create entire summary
             const transcripts = (youtubeData.transcript as { text: string, startTime: number, endTime: number }[]).map(chunk => chunk.text);
             const fullTranscript = transcripts.join(" ");
             
