@@ -20,7 +20,7 @@ interface CreateSpaceDialogProps {
   children?: React.ReactNode;
 }
 
-export function CreateSpaceDialog({ onCreateSpace }: CreateSpaceDialogProps) {
+export function CreateSpaceDialog({ onCreateSpace, children }: CreateSpaceDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [spaceName, setSpaceName] = React.useState("");
 
@@ -37,7 +37,7 @@ export function CreateSpaceDialog({ onCreateSpace }: CreateSpaceDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children ?? (
-          <Button className="dark:bg-gray-900 border" variant="outline">
+          <Button className="dark:bg-background border" variant="outline">
             <Plus className="mr-2 h-4 w-4" />
             New Space
           </Button>

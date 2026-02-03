@@ -121,7 +121,7 @@ export default function RootLayout({
   // 4) Render
   // -------------------------------
   return (
-    <div className="p-8 md:p-16 dark:bg-gray-900">
+    <div className="p-8 md:p-16 dark:bg-background">
       <div className="flex h-full overflow-hidden">
         <div className="flex flex-col flex-1 overflow-hidden">
           <section className="flex flex-col items-center space-y-4">
@@ -156,7 +156,7 @@ export default function RootLayout({
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Upload file, paste YouTube video, or record a lecture"
-                    className="pl-12 pr-12 h-14 border-2 text-xs md:text-sm dark:bg-gray-900"
+                    className="pl-12 pr-12 h-14 border-2 text-xs md:text-sm dark:bg-background"
                   />
 
                   {/* Right icon: submit */}

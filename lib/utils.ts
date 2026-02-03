@@ -1,14 +1,53 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { YoutubeTranscript } from "youtube-transcript";
+import {
+	YoutubeTranscript,
+	YoutubeTranscriptNotAvailableLanguageError,
+} from "youtube-transcript";
 import { Pinecone, Index } from "@pinecone-database/pinecone";
 import { embed, embedMany, generateText } from "ai";
 import axios from "axios";
 import {
+	createEmbedding,
+	createEmbeddings,
 	getChatModel,
 	getEmbeddingModel,
 	getFallbackChatModel,
 } from "@/lib/ai";
+
+const safeJson = (value: unknown) => {
+	try {
+		return JSON.stringify(value).slice(0, 500);
+	} catch {
+		return String(value);
+	}
+};
+
+/** Shape of Axios error for formatting; avoids relying on axios typings. */
+interface AxiosErrorLike {
+	response?: { status?: number; data?: unknown };
+	message: string;
+}
+
+const formatTranscriptError = (error: unknown) => {
+	// Axios-like shape (response + message); avoids relying on axios typings
+	if (
+		typeof error === "object" &&
+		error !== null &&
+		"response" in error &&
+		"message" in error &&
+		typeof (error as AxiosErrorLike).message === "string"
+	) {
+		const err = error as AxiosErrorLike;
+		const status = err.response?.status;
+		const data = err.response?.data;
+		return `AxiosError status=${status ?? "unknown"} message=${err.message} data=${safeJson(data)}`;
+	}
+	if (error instanceof Error) {
+		return `${error.name}: ${error.message}`;
+	}
+	return String(error);
+};
 
 const generateTextWithFallback = async (prompt: string) => {
 	try {
@@ -59,22 +98,48 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
+const TACTIQ_TRANSCRIPT_HEADERS: Record<string, string> = {
+	accept: "*/*",
+	"accept-language": "en-US,en;q=0.9",
+	"content-type": "application/json",
+	origin: "https://tactiq.io",
+	referer: "https://tactiq.io/",
+	"sec-ch-ua":
+		'"Google Chrome";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
+	"sec-ch-ua-mobile": "?0",
+	"sec-ch-ua-platform": '"macOS"',
+	"sec-fetch-dest": "empty",
+	"sec-fetch-mode": "cors",
+	"sec-fetch-site": "same-site",
+	"user-agent":
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+};
+
 export async function fetchTranscript2(
 	videoUrl: string,
 ): Promise<transcriptInterface[] | null> {
 	try {
 		const langCode = "en";
 
-		// Make request to tactiq API
+		console.info("[transcript] tactiq fetch start", { videoUrl, langCode });
+
+		const headers = { ...TACTIQ_TRANSCRIPT_HEADERS };
+		const appCheckToken = process.env.TACTIQ_APPCHECK_TOKEN;
+		if (appCheckToken) {
+			headers["x-firebase-appcheck"] = appCheckToken;
+		}
+
+		// Make request to tactiq API (same as: curl 'https://tactiq-apps-prod.tactiq.io/transcript' ...)
 		const response: {
 			data: {
 				title: string;
 				captions: { text: string; dur: string; start: string }[];
 			};
-		} = await axios.post("https://tactiq-apps-prod.tactiq.io/transcript", {
-			videoUrl,
-			langCode,
-		});
+		} = await axios.post(
+			"https://tactiq-apps-prod.tactiq.io/transcript",
+			{ videoUrl, langCode },
+			{ headers },
+		);
 
 		// Transform the response
 		const transformedCaptions = response?.data?.captions?.map(
@@ -86,51 +151,109 @@ export async function fetchTranscript2(
 			}),
 		);
 
+		if (!transformedCaptions || transformedCaptions.length === 0) {
+			console.warn("[transcript] tactiq returned empty", { videoUrl });
+			return null;
+		}
+
+		console.info("[transcript] tactiq success", {
+			videoUrl,
+			segments: transformedCaptions.length,
+		});
+
 		return transformedCaptions;
 	} catch (transcriptError: unknown) {
-		console.error("Error fetching transcript for video:", videoUrl);
-		console.error(
-			"Error details:",
-			transcriptError instanceof Error
-				? transcriptError.message
-				: transcriptError,
-		);
+		console.error("[transcript] tactiq failed", {
+			videoUrl,
+			error: formatTranscriptError(transcriptError),
+		});
 		return null;
 	}
 }
 
+function formatYoutubeTranscript(
+	transcript: { text: string; duration: number; offset: number; lang?: string }[],
+): transcriptInterface[] {
+	return transcript.map((item) => ({
+		text: item.text,
+		duration: item.duration,
+		offset: item.offset,
+		lang: item.lang || "en",
+	}));
+}
+
 export async function fetchTranscripts(
 	video_id: string,
-): Promise<transcriptInterface[] | null> {
+): Promise<transcriptInterface[]> {
+	const tryFetch = async (config?: { lang: string }) => {
+		const transcript = await YoutubeTranscript.fetchTranscript(
+			video_id,
+			config,
+		);
+		if (!transcript || transcript.length === 0) return null;
+		return formatYoutubeTranscript(transcript);
+	};
+
 	try {
-		const transcript = await YoutubeTranscript.fetchTranscript(video_id, {
+		console.info("[transcript] youtube-transcript fetch start", { video_id });
+
+		// Prefer English; if empty or language not available, use first available track
+		let formatted: transcriptInterface[] | null = await tryFetch({
 			lang: "en",
 		});
 
-		if (!transcript || transcript.length === 0) {
-			console.error("No transcript data returned for video:", video_id);
-			return null;
+		if (!formatted) {
+			console.warn(
+				"[transcript] youtube-transcript en returned empty, trying default track",
+				{ video_id },
+			);
+			formatted = await tryFetch(undefined);
 		}
 
-		const formattedTranscript: transcriptInterface[] = transcript.map(
-			(item) => ({
-				text: item.text,
-				duration: item.duration,
-				offset: item.offset,
-				lang: item.lang || "en",
-			}),
-		);
+		if (!formatted || formatted.length === 0) {
+			console.warn("[transcript] youtube-transcript returned empty", {
+				video_id,
+			});
+			throw new Error("youtube-transcript returned empty");
+		}
 
-		return formattedTranscript;
+		console.info("[transcript] youtube-transcript success", {
+			video_id,
+			segments: formatted.length,
+		});
+
+		return formatted;
 	} catch (transcriptError: unknown) {
-		console.error("Error fetching transcript for video:", video_id);
-		console.error(
-			"Error details:",
-			transcriptError instanceof Error
-				? transcriptError.message
-				: transcriptError,
-		);
-		return null;
+		// If English isn't available, retry without lang to use first available track
+		if (transcriptError instanceof YoutubeTranscriptNotAvailableLanguageError) {
+			console.warn(
+				"[transcript] youtube-transcript en not available, trying default track",
+				{ video_id },
+			);
+			try {
+				const transcript = await YoutubeTranscript.fetchTranscript(
+					video_id,
+					undefined,
+				);
+				if (transcript?.length) {
+					const formatted = formatYoutubeTranscript(transcript);
+					console.info("[transcript] youtube-transcript success (default)", {
+						video_id,
+						segments: formatted.length,
+					});
+					return formatted;
+				}
+			} catch {
+				// fall through to original error
+			}
+		}
+
+		const details = formatTranscriptError(transcriptError);
+		console.error("[transcript] youtube-transcript failed", {
+			video_id,
+			error: details,
+		});
+		throw new Error(`youtube-transcript failed: ${details}`);
 	}
 }
 
@@ -138,7 +261,8 @@ export async function fetchTranscriptWithFallback(options: {
 	videoUrl?: string;
 	videoId?: string;
 }): Promise<transcriptInterface[] | null> {
-	if (options.videoUrl) {
+	const useTactiq = process.env.TRANSCRIPT_PROVIDER === "tactiq";
+	if (useTactiq && options.videoUrl) {
 		const primary = await fetchTranscript2(options.videoUrl);
 		if (primary && primary.length > 0) {
 			return primary;
@@ -146,9 +270,22 @@ export async function fetchTranscriptWithFallback(options: {
 	}
 
 	if (options.videoId) {
-		const fallback = await fetchTranscripts(options.videoId);
-		if (fallback && fallback.length > 0) {
-			return fallback;
+		try {
+			return await fetchTranscripts(options.videoId);
+		} catch (err) {
+			// If youtube-transcript failed, try Tactiq when videoUrl is available
+			if (options.videoUrl) {
+				console.info(
+					"[transcript] youtube-transcript failed, trying Tactiq fallback",
+					{ videoUrl: options.videoUrl },
+				);
+				const tactiq = await fetchTranscript2(options.videoUrl);
+				if (tactiq && tactiq.length > 0) return tactiq;
+				throw new Error(
+					"Transcript not available: youtube-transcript failed and Tactiq returned empty",
+				);
+			}
+			throw err;
 		}
 	}
 
@@ -211,16 +348,14 @@ export const generateEmbeddings = async (
 	video_id: string,
 ) => {
 	const results: ChunkData[] = [];
-	const embeddingModel = getEmbeddingModel();
 	const batchSize = 50;
 
 	for (let i = 0; i < chunks.length; i += batchSize) {
 		const batch = chunks.slice(i, i + batchSize);
 		try {
-			const { embeddings } = await embedMany({
-				model: embeddingModel,
-				values: batch.map((chunk) => chunk.text),
-			});
+			const embeddings = await createEmbeddings(
+				batch.map((chunk) => chunk.text)
+			);
 
 			embeddings.forEach((embedding, batchIndex) => {
 				const chunk = batch[batchIndex];
@@ -230,7 +365,7 @@ export const generateEmbeddings = async (
 					text: chunk.text,
 					startTime: chunk.startTime as number,
 					endTime: chunk.endTime as number,
-					vector: Array.from(embedding),
+					vector: embedding,
 				});
 			});
 		} catch (error) {
@@ -500,12 +635,7 @@ export async function queryPineconeVectorStore(
 	searchQuery: string,
 ): Promise<string> {
 	console.log("Querying Pinecone vector store");
-	const embeddingModel = getEmbeddingModel();
-	const { embedding } = await embed({
-		model: embeddingModel,
-		value: searchQuery,
-	});
-	const queryEmbedding = Array.from(embedding);
+	const queryEmbedding = await createEmbedding(searchQuery);
 	console.log("Query embedding generated");
 	const index = client.index(indexname);
 	console.log("Index fetched");

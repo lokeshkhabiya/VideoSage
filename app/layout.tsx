@@ -34,12 +34,12 @@ export default function RootLayout({
           <AuthProvider>
             <SpacesProvider>
               <div className="flex h-screen overflow-hidden">
-                <div className="flex flex-col flex-1 overflow-hidden dark:bg-gray-900">
+                <div className="flex flex-col flex-1 overflow-hidden dark:bg-background">
                   <Header />
-                  <main className="flex-1 overflow-y-auto dark:bg-gray-900">
+                  <main className="flex-1 overflow-y-auto dark:bg-background">
                     {children}
                   </main>
-                  <footer className=" mx-auto w-full px-4 py-2 text-center text-gray-600 dark:bg-gray-900 border-t dark:text-gray-400 ">
+                  <footer className=" mx-auto w-full px-4 py-2 text-center text-gray-600 dark:bg-background border-t dark:text-gray-400 ">
                     <p>
                       &copy; {new Date().getFullYear()} VideoSage. All rights
                       reserved.

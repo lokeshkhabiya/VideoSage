@@ -1,12 +1,17 @@
 import { NextRequest } from "next/server";
-
-type ChatMessage = { role: string; content: string };
+import type { UIMessage } from "ai";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { queryPineconeVectorStore } from "@/lib/utils";
 import { streamText } from "ai";
 import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { getChatModel, getFallbackChatModel } from "@/lib/ai";
+
+function getTextFromUIMessage(message: UIMessage): string {
+	const parts = message.parts ?? [];
+	const textPart = parts.find((p): p is { type: "text"; text: string } => p.type === "text");
+	return textPart?.text ?? "";
+}
 
 const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! });
 
@@ -21,7 +26,8 @@ export async function POST(req: NextRequest) {
 		}
 
 		const reqBody = await req.json();
-		const content_id = reqBody.data.content_id;
+		const content_id =
+			reqBody.content_id ?? reqBody.data?.content_id ?? reqBody.body?.content_id;
 
 		if (!content_id) {
 			throw new Error("Missing content_id in request data");
@@ -52,8 +58,9 @@ export async function POST(req: NextRequest) {
 			throw new Error("Missing youtube_id for content");
 		}
 
-		const messages: ChatMessage[] = reqBody.messages;
-		const userQuestion = messages[messages.length - 1].content;
+		const messages: UIMessage[] = reqBody.messages ?? [];
+		const lastUserMessage = [...messages].reverse().find((message) => message.role === "user");
+		const userQuestion = lastUserMessage ? getTextFromUIMessage(lastUserMessage) : "";
 
 		console.log("Processing chat request for video:", video_id);
 		console.log("User question:", userQuestion);
@@ -109,7 +116,12 @@ export async function POST(req: NextRequest) {
         ${retrievals}
 
         Previous Messages:
-        ${messages.map((m) => `${m.role}: ${m.content}`).join("\n")}
+        ${messages
+					.map((m) => {
+						const text = getTextFromUIMessage(m);
+						return text ? `${m.role}: ${text}` : `${m.role}: [non-text message]`;
+					})
+					.join("\n")}
         
         Provide a well-structured, informative response that thoroughly addresses the question.`;
 

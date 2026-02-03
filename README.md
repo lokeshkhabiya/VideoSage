@@ -33,6 +33,86 @@ Copy `.env.example` to `.env` and set the required values.
 
 Note: the Pinecone index dimension must match the embedding model (1536 for `text-embedding-3-small`).
 
+## Redis + Workers (Docker)
+
+The app uses **BullMQ** with Redis for the `content-processing` queue. To run jobs in the background instead of inline, use Redis via Docker.
+
+### Step 1: Install Docker
+
+- **macOS/Windows:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- **Linux:** `sudo apt install docker.io docker-compose-plugin` (or your distro’s package)
+
+Ensure Docker is running: `docker info`.
+
+### Step 2: Start Redis with Docker Compose
+
+From the project root:
+
+```bash
+docker compose up -d redis
+```
+
+This starts Redis 7 on `localhost:6379` with persistence (`redis_data` volume). Check it’s up:
+
+```bash
+docker compose ps
+docker compose exec redis redis-cli ping
+# Should print: PONG
+```
+
+### Step 3: Configure environment
+
+In `.env`:
+
+- Set **REDIS_URL** (or REDIS_HOST + REDIS_PORT):
+
+  ```env
+  REDIS_URL="redis://localhost:6379"
+  ```
+
+- To use the **queue** instead of inline processing, either remove `CONTENT_PROCESSING_MODE` or set:
+
+  ```env
+  CONTENT_PROCESSING_MODE=queue
+  ```
+
+  If both `REDIS_URL` and `REDIS_HOST` are unset, the app falls back to inline processing (no worker needed).
+
+### Step 4: Run the content worker
+
+In a separate terminal:
+
+```bash
+pnpm worker:content
+```
+
+The worker processes jobs from the `content-processing` queue. Keep it running while you want background processing.
+
+### Step 5: Run the app
+
+```bash
+pnpm dev
+```
+
+New content will be enqueued to Redis and processed by the worker.
+
+### Useful commands
+
+| Command | Description |
+|--------|-------------|
+| `docker compose up -d redis` | Start Redis in the background |
+| `docker compose down` | Stop Redis (data in volume is kept) |
+| `docker compose down -v` | Stop Redis and remove the `redis_data` volume |
+| `docker compose logs -f redis` | Follow Redis logs |
+| `pnpm worker:content` | Start the content-processing worker |
+
+### Summary
+
+1. **Docker running** → `docker compose up -d redis`
+2. **`.env`** → `REDIS_URL="redis://localhost:6379"` and optionally `CONTENT_PROCESSING_MODE=queue`
+3. **Terminal 1** → `pnpm dev`
+4. **Terminal 2** → `pnpm worker:content`
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

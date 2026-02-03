@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import * as go from "gojs";
 import { ReactDiagram } from "gojs-react";
 import { useParams } from "next/navigation";
+import { useTheme } from "next-themes";
 import axios from "axios";
 
 interface MindMapTabProps {
@@ -34,6 +35,7 @@ export default function MindMapTab({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const { id } = useParams();
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -63,7 +65,12 @@ export default function MindMapTab({
     }
   }, [id]);
 
-  // Initialize the diagram
+  // Initialize the diagram (connector color depends on theme)
+  const isDark =
+    resolvedTheme === "dark" ||
+    (typeof document !== "undefined" &&
+      document.documentElement.classList.contains("dark"));
+
   function initDiagram() {
     const $ = go.GraphObject.make;
     const diagram = $(go.Diagram, {
@@ -77,9 +84,9 @@ export default function MindMapTab({
         linkKeyProperty: "key"
       })
     });
- 
+
     // @ts-expect-error diagram.background type is unknown
-    diagram.background = "white";
+    diagram.background = isDark ? "#0A0A0A" : "white";
 
     // Define node templates for different categories
     const rootTemplate = $(go.Node, "Auto",
@@ -139,14 +146,14 @@ export default function MindMapTab({
     diagram.nodeTemplateMap.add("topic", topicTemplate);
     diagram.nodeTemplateMap.add("subtopic", subtopicTemplate);
 
-    diagram.linkTemplate =
-      $(go.Link,
-        { routing: go.Link.Orthogonal },
-        $(go.Shape, { 
-          strokeWidth: 1.5,
-          stroke: "black"
-        })
-      );
+    diagram.linkTemplate = $(
+      go.Link,
+      { routing: go.Link.Orthogonal },
+      $(go.Shape, {
+        strokeWidth: 1.5,
+        stroke: isDark ? "white" : "black"
+      })
+    );
 
     return diagram;
   }
@@ -155,7 +162,7 @@ export default function MindMapTab({
     <TabsContent value={value} className="flex-1 min-h-0 overflow-hidden mt-4" suppressHydrationWarning>
       {activeMainTab === value && (
         <Card className="h-full flex flex-col p-6 min-h-0">
-          <div className="relative flex-1 rounded-lg border bg-white dark:bg-white overflow-hidden">
+          <div className="relative flex-1 rounded-lg border bg-white dark:bg-background overflow-hidden">
             {loading && (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
@@ -173,6 +180,7 @@ export default function MindMapTab({
             )}
             {mindMapData && !loading && !error && (
               <ReactDiagram
+                key={resolvedTheme ?? "light"}
                 initDiagram={initDiagram}
                 divClassName="diagram-component h-full w-full"
                 nodeDataArray={mindMapData.nodes}

@@ -24,7 +24,7 @@ export function Sidebar() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full dark:bg-gray-900">
+    <div className="flex flex-col h-full w-full dark:bg-background">
       <div className="p-4 border-b">
         <Link href="/" className="flex items-center space-x-2">
           <VideoSageLogo />
@@ -95,5 +95,13 @@ export function Sidebar() {
 }
 
 function VideoSageLogo() {
-  return <Image alt="Logo" src={"/logo.png"} width="55" height="55" />;
+  return (
+    <Image
+      alt="Logo"
+      src="/logo.png"
+      width={55}
+      height={55}
+      className="h-auto w-auto"
+    />
+  );
 }

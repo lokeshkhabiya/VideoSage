@@ -1,0 +1,21 @@
+# Redis for BullMQ worker queues (content-processing)
+# Usage: docker compose up -d redis
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: videosage-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  redis_data:

@@ -29,6 +29,7 @@ export default function SignUp() {
     lastName: "",
     password: "",
   });
+  const [error, setError] = useState<string | null>(null);
   const pathname = usePathname();
   const { isAuthenticated, login } = useAuth();
 
@@ -46,6 +47,7 @@ export default function SignUp() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     try {
       await axios.post("/api/auth/signup", {
         email: formData.email,
@@ -63,8 +65,13 @@ export default function SignUp() {
       }
 
       router.replace("/dashboard");
-    } catch (error) {
-      console.error("Signup failed:", error);
+    } catch (err: unknown) {
+      console.error("Signup failed:", err);
+      const message =
+        axios.isAxiosError(err) && err.response?.data?.message
+          ? String(err.response.data.message)
+          : "Signup failed. Please try again.";
+      setError(message);
     }
   };
 
@@ -73,7 +80,7 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-full bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-full bg-gradient-to-b from-gray-50 to-white dark:from-[#0A0A0A] dark:to-[#0A0A0A] flex items-center justify-center p-4">
       <div className="flex-col md:flex-row flex w-full max-w-6xl gap-8 h-[80vh]">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -105,6 +112,11 @@ export default function SignUp() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-3 py-2 rounded-md">
+                    {error}
+                  </p>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">

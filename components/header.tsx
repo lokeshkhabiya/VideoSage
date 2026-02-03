@@ -32,7 +32,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-gray-900 backdrop-blur">
+    <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-background backdrop-blur">
       <div className=" flex h-14 items-center my-3 px-2 md:px-12 justify-between w-full">
         <div className="flex items-center">
           <div className=" flex items-center ">
@@ -79,7 +79,7 @@ export function Header() {
                     <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="p-6 dark:bg-gray-900" align="end">
+                <DropdownMenuContent className="p-6 dark:bg-background" align="end">
                   <DropdownMenuItem onSelect={() => router.push("/settings")}>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
@@ -113,5 +113,13 @@ export function Header() {
 }
 
 function VideoSageLogo() {
-  return <Image src={"/logo.png"} alt="Logo" width="55" height="55"></Image>;
+  return (
+    <Image
+      src="/logo.png"
+      alt="Logo"
+      width={55}
+      height={55}
+      className="h-auto w-auto"
+    />
+  );
 }

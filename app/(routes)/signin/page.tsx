@@ -72,7 +72,7 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-full bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-full bg-gradient-to-b from-gray-50 to-white dark:from-[#0A0A0A] dark:to-[#0A0A0A] flex items-center justify-center p-4">
       <div className="flex-col md:flex-row flex w-full max-w-6xl gap-8 h-[80vh]">
         <motion.div
           initial={{ opacity: 0, x: -20 }}

@@ -43,7 +43,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-full dark:bg-gray-900">
+    <div className="min-h-full dark:bg-background">
       <main className="container py-6">
         <div className="flex flex-col space-y-8">
           <section className="space-y-4">

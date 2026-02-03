@@ -23,10 +23,24 @@ export async function processContentPipeline(params: {
     data: { status: "PROCESSING" },
   });
 
-  const transcript = await fetchTranscriptWithFallback({
-    videoUrl: youtubeUrl,
-    videoId: youtubeId,
-  });
+  let transcript: Awaited<ReturnType<typeof fetchTranscriptWithFallback>> = null;
+  try {
+    transcript = await fetchTranscriptWithFallback({
+      videoUrl: youtubeUrl,
+      videoId: youtubeId,
+    });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : String(error);
+    await prisma.contentProcessingJob.update({
+      where: { job_id: jobId },
+      data: {
+        status: "FAILED",
+        error: errorMessage,
+      },
+    });
+    throw error;
+  }
 
   if (!transcript || transcript.length === 0) {
     await prisma.contentProcessingJob.update({

@@ -1,21 +1,41 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { Card } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Button } from "./ui/button";
 import { Loader2, Send } from "lucide-react";
 import { Input } from "./ui/input";
-import { useChat } from "ai/react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import MessageBox from "./messageBox";
 import { useParams } from "next/navigation";
 
 const Chat = () => {
   const { id } = useParams();
+  const contentId = Array.isArray(id) ? id[0] : id;
+  const [input, setInput] = useState("");
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading } =
-    useChat({
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
       api: "/api/generate/chat",
-    });
+      body: contentId ? { content_id: contentId } : {},
+    }),
+  });
+
+  const isLoading = status === "submitted" || status === "streaming";
+
+  const getMessageText = (message: (typeof messages)[number]) => {
+    const parts = message.parts ?? [];
+    const textPart = parts.find((p): p is { type: "text"; text: string } => p.type === "text");
+    return textPart?.text ?? "";
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contentId || !input.trim() || isLoading) return;
+    sendMessage({ text: input });
+    setInput("");
+  };
 
   return (
     <Card className="h-full flex flex-col">
@@ -27,12 +47,14 @@ const Chat = () => {
               but your feedback will help me improve!
             </p>
           </div>
-          {messages.map((message, index) => {
+          {messages.map((message) => {
+            const text = getMessageText(message);
+            if (!text) return null;
             return (
               <MessageBox
-                key={index}
+                key={message.id}
                 role={message.role}
-                content={message.content}
+                content={text}
               />
             );
           })}
@@ -48,25 +70,15 @@ const Chat = () => {
         </div>
       </ScrollArea>
       <div className="p-4 border-t">
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            handleSubmit(event, {
-              data: {
-                content_id: id,
-              },
-            });
-          }}
-          className="flex space-x-2"
-        >
+        <form onSubmit={handleSubmit} className="flex space-x-2">
           <div className="flex-1">
             <Input
               placeholder="Ask anything..."
               value={input}
-              onChange={handleInputChange}
+              onChange={(e) => setInput(e.target.value)}
             />
           </div>
-          <Button type="submit" size="icon" disabled={isLoading}>
+          <Button type="submit" size="icon" disabled={isLoading || !contentId}>
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (

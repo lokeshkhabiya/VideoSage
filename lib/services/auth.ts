@@ -1,13 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
+import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { signinValidation, signupValidation } from "@/validations/userValidation";
 import { clearSessionCookie, getAuthUser, setSessionCookie, signSessionToken } from "@/lib/auth";
 
 export async function signupHandler(req: NextRequest) {
   try {
+    if (!process.env.JWT_SECRET) {
+      console.error("Signup failed: JWT_SECRET is not defined. Add it to your .env file.");
+      return NextResponse.json(
+        { message: "Server configuration error. Please try again later." },
+        { status: 500 }
+      );
+    }
+
     const body = await req.json();
-    const validatedBody = signupValidation(body);
+    let validatedBody: { email?: string; username?: string; first_name: string; last_name: string; password: string };
+    try {
+      validatedBody = signupValidation(body) as typeof validatedBody;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const first = err.errors[0];
+        const message = first ? `${first.path.join(".")}: ${first.message}` : "Validation failed";
+        return NextResponse.json({ message }, { status: 400 });
+      }
+      throw err;
+    }
 
     const email = validatedBody.email ?? validatedBody.username;
     const username =
@@ -111,6 +130,9 @@ export async function signupHandler(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("Error while signing up:", error instanceof Error ? error.message : error);
+    if (error instanceof Error && error.stack) {
+      console.error(error.stack);
+    }
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }
@@ -120,8 +142,26 @@ export async function signupHandler(req: NextRequest) {
 
 export async function loginHandler(req: NextRequest) {
   try {
+    if (!process.env.JWT_SECRET) {
+      console.error("Login failed: JWT_SECRET is not defined. Add it to your .env file.");
+      return NextResponse.json(
+        { message: "Server configuration error. Please try again later." },
+        { status: 500 }
+      );
+    }
+
     const body = await req.json();
-    const validatedBody = signinValidation(body);
+    let validatedBody: { email?: string; username?: string; password: string };
+    try {
+      validatedBody = signinValidation(body) as typeof validatedBody;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const first = err.errors[0];
+        const message = first ? `${first.path.join(".")}: ${first.message}` : "Validation failed";
+        return NextResponse.json({ message }, { status: 400 });
+      }
+      throw err;
+    }
 
     const email = validatedBody.email ?? validatedBody.username;
     const { password } = validatedBody;
@@ -210,6 +250,9 @@ export async function loginHandler(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("Error while signing in:", error instanceof Error ? error.message : error);
+    if (error instanceof Error && error.stack) {
+      console.error(error.stack);
+    }
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }

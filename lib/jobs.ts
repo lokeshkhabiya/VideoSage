@@ -26,6 +26,9 @@ export async function enqueueContentProcessing(params: {
       jobId: jobRecord.job_id,
     });
   } else {
+    console.warn(
+      "[content-processing] Job queued to Redis. Ensure worker is running: `pnpm worker:content`",
+    );
     const { contentQueue } = await import("./queue");
     await contentQueue.add("process", {
       contentId: params.contentId,

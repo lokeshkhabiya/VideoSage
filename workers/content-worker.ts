@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { Worker } from "bullmq";
 import { connection } from "../lib/queue";
 import { processContentPipeline } from "../lib/pipeline";

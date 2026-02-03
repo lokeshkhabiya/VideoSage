@@ -36,8 +36,8 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f6f2eb] to-white dark:from-[#0c1117] dark:to-[#0a0f14] transition-colors duration-500 px-4">
-      <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-[#0a0f14] [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#0ea5a4_100%)] dark:[background:radial-gradient(125%_125%_at_50%_10%,#0a0f14_40%,#0f766e_100%)] opacity-25"></div>
+    <div className="min-h-screen bg-gradient-to-b from-[#f6f2eb] to-white dark:from-[#0A0A0A] dark:to-[#0A0A0A] transition-colors duration-500 px-4">
+      <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-[#0A0A0A] [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#0ea5a4_100%)] dark:[background:radial-gradient(125%_125%_at_50%_10%,#0A0A0A_40%,#0f766e_100%)] opacity-25"></div>
 
       <main className="container mx-auto ">
         <motion.section
@@ -78,7 +78,7 @@ export default function Home() {
                 <Link href="/signup">Get Started</Link>
               </Button>
               {/* <Button
-                className="dark:bg-gray-900 border p-5 text-md"
+                className="dark:bg-background border p-5 text-md"
                 variant="ghost"
                 asChild
               >

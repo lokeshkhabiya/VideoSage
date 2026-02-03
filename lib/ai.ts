@@ -1,4 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
+import OpenAI from "openai";
 
 const requireEnv = (key: string) => {
 	const value = process.env[key];
@@ -9,6 +10,7 @@ const requireEnv = (key: string) => {
 };
 
 let openaiClient: ReturnType<typeof createOpenAI> | null = null;
+let openaiDirectClient: OpenAI | null = null;
 
 export const getOpenAIClient = () => {
 	if (!openaiClient) {
@@ -17,6 +19,33 @@ export const getOpenAIClient = () => {
 		});
 	}
 	return openaiClient;
+};
+
+export const getOpenAIDirectClient = () => {
+	if (!openaiDirectClient) {
+		openaiDirectClient = new OpenAI({
+			apiKey: requireEnv("OPENAI_API_KEY"),
+		});
+	}
+	return openaiDirectClient;
+};
+
+export const getEmbeddingDimensions = () =>
+	parseInt(process.env.EMBEDDING_DIMENSIONS || "1024");
+
+export const createEmbeddings = async (texts: string[]) => {
+	const client = getOpenAIDirectClient();
+	const response = await client.embeddings.create({
+		model: getEmbeddingModelId(),
+		input: texts,
+		dimensions: getEmbeddingDimensions(),
+	});
+	return response.data.map((item) => item.embedding);
+};
+
+export const createEmbedding = async (text: string) => {
+	const embeddings = await createEmbeddings([text]);
+	return embeddings[0];
 };
 
 export const getChatModelId = () =>
@@ -34,4 +63,6 @@ export const getFallbackChatModel = () =>
 	getOpenAIClient()(getFallbackChatModelId());
 
 export const getEmbeddingModel = () =>
-	getOpenAIClient().embeddingModel(getEmbeddingModelId());
+	getOpenAIClient().embedding(getEmbeddingModelId(), {
+		dimensions: parseInt(process.env.EMBEDDING_DIMENSIONS || "1024"),
+	});
