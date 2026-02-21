@@ -16,11 +16,6 @@ Hierarchical mind maps that break down the video's key themes, topics, and subto
 
 ![Mind Map - Dark Mode](public/demo02.png)
 
-### Mind Map (Alternate View)
-Interactive node-based visualization powered by GoJS for exploring content structure.
-
-![Mind Map - Alternate View](public/demo03.png)
-
 ## Features
 
 | Feature | Description |
