@@ -1,4 +1,4 @@
-# VideoSage
+## VideoSage
 
 **AI-powered video learning platform** that transforms YouTube videos into interactive learning experiences with chat, quizzes, flashcards, summaries, and mind maps.
 
